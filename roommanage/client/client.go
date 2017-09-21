@@ -14,7 +14,7 @@ import (
 
 type RoomManageClient interface {
 	Create(RoomType int, ownerId int, maxPlayers int) (int64, error)
-	Query(playerId int64) (roomId int64, serverId string, host string, port int, maxPlayers int, round int, roomConfig string,forbidIp int, err error)
+	Query(playerId int64) (roomId int64, serverId string, host string, port int, maxPlayers int, round int, roomConfig string,forbidIp int,openRoomType int, err error)
 	Leave(playerId int64, roomId int64) error
 	Destroy(roomId int64, refund bool) error
 }
@@ -49,7 +49,7 @@ func (rmc *roomManageClient) Create(roomType int, ownerId int, maxPlayers int) (
 	return
 }
 
-func (rmc *roomManageClient) Query(playerId int64) (roomId int64, serverId string, host string, port int, maxPlayer int, round int, roomConfig string,forbidIp int,err error) {
+func (rmc *roomManageClient) Query(playerId int64) (roomId int64, serverId string, host string, port int, maxPlayer int, round int, roomConfig string,forbidIp int,openRoomType int,err error) {
 	apiPath := "/api/roommanage/query"
 	apiPath = "http://" + rmc.config.RoomManageCenter + apiPath
 	form := api.QueryForm{
@@ -87,7 +87,9 @@ func (rmc *roomManageClient) Query(playerId int64) (roomId int64, serverId strin
 	port = int(query["port"].(float64))
 	forbidIp = int(query["forbidIp"].(float64))
 	
-	return roomId, serverId, host, port, maxPlayer, round, roomConfig,forbidIp, nil
+	openRoomType = = int(query["openRoomType"].(float64))
+	
+	return roomId, serverId, host, port, maxPlayer, round, roomConfig,forbidIp,openRoomType,nil
 }
 
 func (rmc *roomManageClient) Leave(playerId int64, roomId int64) error {

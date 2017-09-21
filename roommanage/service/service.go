@@ -245,8 +245,12 @@ func (rms *roomManageService) AutoRoom(roomType RoomType, pId int64, maxPlayers 
 		maxRoomTime = rms.config.MaxRoomTime   
 	}
 	
-	r := NewRoom(roomTime,maxRoomTime,int64(roomId), bestServer, roomType, owner, cost, maxPlayers, round, roomConfig , forbidIp,openRoomType)
+	r := NewRoom(roomTime,maxRoomTime,int64(roomId), bestServer, roomType, pId, cost, maxPlayers, round, roomConfig , forbidIp,openRoomType)
 
+	if openRoomType==OpenRoomTypeUser { 
+		r.JoinPlayer(owner)
+	}
+	
 	//缓存
 	rms.roomsMap[r.Id()] = r
 
@@ -298,7 +302,12 @@ func (rms *roomManageService) CreateRoom(roomType RoomType, ownerId int64, maxPl
 		maxRoomTime = rms.config.MaxRoomTime   
 	}
 	
-	r = NewRoom(roomTime,maxRoomTime,int64(roomId), bestServer, roomType, owner, cost, maxPlayers, round, roomConfig , forbidIp,openRoomType)
+	r = NewRoom(roomTime,maxRoomTime,int64(roomId), bestServer, roomType, ownerId, cost, maxPlayers, round, roomConfig , forbidIp,openRoomType)
+	
+	if openRoomType==OpenRoomTypeUser { 
+		r.JoinPlayer(owner)
+	}
+	
 	//缓存
 	rms.roomsMap[r.Id()] = r
 	rms.playersMap[owner.Id()] = owner
@@ -309,6 +318,7 @@ func (rms *roomManageService) CreateRoom(roomType RoomType, ownerId int64, maxPl
 	} else {
 		rms.servers[r.ServerId()] = num + 1
 	}
+	
 	return r, nil
 }
 
@@ -331,6 +341,7 @@ func (rms *roomManageService) JoinRoom(rid int64, pId int64,ip string) Room {
 	} else {
 		return nil
 	}
+
 }
 
 //离开房间

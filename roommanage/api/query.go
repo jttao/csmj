@@ -24,8 +24,8 @@ type QueryResponse struct {
 	ServerId   string `json:"serverId"`
 	Host       string `json:"host"`
 	Port       int    `json:"port"`
-	ForbidIp   int    `json:"forbidIp"`
-	
+	ForbidIp   int    `json:"forbidIp"` 
+	OpenRoomType int `json:"openRoomType"`   
 }
 
 func handleQuery(rw http.ResponseWriter, req *http.Request) {
@@ -51,8 +51,8 @@ func handleQuery(rw http.ResponseWriter, req *http.Request) {
 		result.RoomConfig = r.RoomConfig()
 		result.Round = r.Round()
 		result.MaxPlayers = r.MaxPlayers()
-		result.ForbidIp = r.ForbidIp()
-
+		result.ForbidIp = r.ForbidIp() 
+		result.OpenRoomType = int(r.OpenRoomType())
 		sc := rms.GetServerByServerId(r.ServerId())
 		result.Host = sc.Host
 		result.Port = sc.Port

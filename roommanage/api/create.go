@@ -60,7 +60,8 @@ func handleCreate(rw http.ResponseWriter, req *http.Request) {
 	rms := roommanageservice.RoomManageInContext(req.Context())
 	p := rms.GetPlayerById(ownerId)
 
-	//玩家在房间内了
+	
+	//非代理开房，玩家在房间内了
 	if p != nil {
 		rr := gamehttputils.NewFailedResult(PlayerAlreadyInRoomErrorCode)
 		httputils.WriteJSON(rw, http.StatusOK, rr)
@@ -87,6 +88,7 @@ func handleCreate(rw http.ResponseWriter, req *http.Request) {
 		}).Error("创建房间,判断是否被封号")
 		return
 	}
+
 	if forbid {
 		rr := gamehttputils.NewFailedResult(AccountIsLockErrorCode)
 		httputils.WriteJSON(rw, http.StatusOK, rr)
@@ -109,7 +111,7 @@ func handleCreate(rw http.ResponseWriter, req *http.Request) {
 		}).Error("创建房间,判断是否免房卡")
 		return
 	}
-
+	
 	if !rms.Debug() {
 		if !free {
 			//判断是否有钱

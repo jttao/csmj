@@ -120,7 +120,7 @@ func HandleLogin(s session.Session, msg *pb.Message) error {
 				}).Error("解析房间配置数据错误")
 			return err
 		}
-
+		
 		r = changsha.NewRoom(mahjongContext.ServerCfg.Room, cf, maxPlayer, round, roomId, forbidIp, room.NewRoomDelegate(mahjongContext.RoomManager, mahjongContext.DB))
 		if flag := mahjongContext.RoomManager.AddRoom(r); !flag {
 			log.Error("创建房间失败")

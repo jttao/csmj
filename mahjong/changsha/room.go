@@ -130,10 +130,10 @@ type CustomRoomConfig struct {
 	ZhuaNiao   int  `json:"zhuaNiao"`
 	//抓鸟算法 默认乘法 true:2的密次方
 	ZhuaNiaoAlg bool `json:"zhuaNiaoAlg"` 
-}
+} 
 
 //创建新房间
-func NewRoom(config *RoomConfig, customConfig *CustomRoomConfig, numPlayer int, round int, roomId int64,forbidIp int,rd RoomDelegate) *Room {
+func NewRoom(config *RoomConfig, customConfig *CustomRoomConfig, numPlayer int, round int, roomId int64,forbidIp int,openRoomType int,roomTime int64,maxRoomTime int64,rd RoomDelegate) *Room {
 	r := &Room{
 		config:       config,
 		customConfig: customConfig,
@@ -142,9 +142,12 @@ func NewRoom(config *RoomConfig, customConfig *CustomRoomConfig, numPlayer int, 
 	r.deck = NewDeck()
 	r.roomId = roomId
 	r.delegate = rd
+	r.roomTime = roomTime
+	r.maxRoomTime = maxRoomTime 
 	r.init()
 	r.totalRound = int32(round)
-	r.forbidIp = int32(forbidIp)
+	r.forbidIp = int32(forbidIp) 
+	r.openRoomType = openRoomType
 	r.ctx = context.Background()
 	return r
 }
@@ -218,10 +221,13 @@ type Room struct {
 	//鸟牌id
 	niaoPaiPlayerIds []int64
 
-	forbidIp int32
-
+	forbidIp int32 
+	
+	roomTime int64 
+	
+	maxRoomTime int64  
 	//房间类型
-	openRoomType int32
+	openRoomType int
 	//禁止加入时间
 	forbidJoinTime int64
 	//最后游戏时间
@@ -291,7 +297,7 @@ func (r *Room) LastGameTime() int64 {
 	return r.lastGameTime
 }
 
-func (r *Room) GetOpenRoomType() int32 { 
+func (r *Room) GetOpenRoomType() int { 
 	return r.openRoomType
 }
 
@@ -796,7 +802,9 @@ func (r *Room) initLogger() {
 func (r *Room) init() {
 	r.initLogger()
 	now := r.now()
-	r.createTime = now
+	r.createTime = now  
+	r.forbidJoinTime = r.createTime + r.roomTime*int64(time.Second/time.Millisecond) 
+	r.lastGameTime = r.createTime + r.maxRoomTime*int64(time.Second/time.Millisecond) 
 	r.enterInitState(now)
 }
 

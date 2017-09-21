@@ -19,7 +19,7 @@ type CreateForm struct {
 	ZhuaNiaoAlg bool `form:"zhuaNiaoAlg" json:"zhuaNiaoAlg"`
 	Location  string `form:"location" json:"location"`
 	ForbidIp     int `form:"forbidIp" json:"forbidIp"`
-	OpenRoomType     int `form:"openRoomType" json:"openRoomType"`
+	OpenRoomType int `form:"openRoomType" json:"openRoomType"`
 }
 
 func handleCreate(rw http.ResponseWriter, req *http.Request) {
@@ -78,6 +78,8 @@ func handleCreate(rw http.ResponseWriter, req *http.Request) {
 	zhuanXian := form.ZhuangXian
 	zhuaNiaoAlg := form.ZhuaNiaoAlg
 	zhuaNiaoId := form.ZhuaNiaoId
+	
+
 	if !valid(zhuanXian, zhuaNiaoId) {
 		rw.WriteHeader(http.StatusBadRequest)
 		log.WithFields(

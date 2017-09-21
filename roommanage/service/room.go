@@ -65,12 +65,9 @@ type room struct {
 	cost       int
 	players    map[int64]Player
 	forbidIp   int
-	openRoomType OpenRoomType
-	//创建时间
-	createTime int64
-	//禁止加入时间
-	forbidJoinTime int64
-	//最后游戏时间
+	openRoomType OpenRoomType 
+	createTime int64 
+	forbidJoinTime int64 
 	lastGameTime int64
 }
 
@@ -236,13 +233,12 @@ func (r *room) IfExpired() bool {
 	return false
 }
 
-
-func NewRoom(roomTime int64, maxRoomTime int64, id int64, serverId string, roomType RoomType, owner Player, cost int, maxPlayers int, round int, roomConfig string,forbidIp int,openRoomType OpenRoomType) Room {
+func NewRoom(roomTime int64, maxRoomTime int64, id int64, serverId string, roomType RoomType, ownerId int64, cost int, maxPlayers int, round int, roomConfig string,forbidIp int,openRoomType OpenRoomType) Room {
 	r := &room{}
 	r.players = make(map[int64]Player)
 	r.id = id
 	r.serverId = serverId
-	r.ownerId = owner.Id()
+	r.ownerId = ownerId
 	r.roomType = roomType
 	r.maxPlayers = maxPlayers
 	r.round = round
@@ -255,6 +251,5 @@ func NewRoom(roomTime int64, maxRoomTime int64, id int64, serverId string, roomT
 	r.forbidJoinTime = r.createTime + roomTime*int64(time.Second/time.Millisecond) 
 	r.lastGameTime = r.createTime + maxRoomTime*int64(time.Second/time.Millisecond)
 	
-	r.JoinPlayer(owner)
 	return r
 }
