@@ -1,0 +1,42 @@
+{
+    "host":"0.0.0.0",
+    "port":4000,
+    "redis":{
+        "host":"127.0.0.1",
+        "port":6379,
+        "maxIdle":50,
+        "maxActive":50,
+        "wait": true,
+        "idleTimeout":240
+    },
+    "user":{
+        "key":"./config/key",
+        "expiredTime":3600000
+    },
+    "db":{
+        "debug":true,
+        "dialect":"mysql",
+        "user":"root",
+        "password":"root",
+        "host":"127.0.0.1:3306",
+        "dbName":"game",
+        "parseTime":true,
+        "charset":"utf8"
+    },
+    "roomManage":{
+        "servers":[
+            {
+                "id":"1",
+                "host":"192.168.3.5",
+                "port":3000,
+                "room":500
+            }
+        ],
+        "debug":true,
+        "userRoomTime":600,
+        "agentRoomTime":3600,
+        "maxRoomTime":86400,
+        "expiredTime":60
+    }
+    
+}	

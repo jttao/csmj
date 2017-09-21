@@ -1,0 +1,15 @@
+syntax = "proto2";
+
+import "game/basic/pb/basic.proto";
+
+//common message optional from 201-300
+package common;
+
+message GCError {
+   required int32 errorCode = 1;
+}
+
+extend pb.Message {
+   optional GCError gcError = 201;
+}
+

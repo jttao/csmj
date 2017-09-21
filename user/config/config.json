@@ -1,0 +1,30 @@
+{
+    "host":"0.0.0.0",
+    "port":80,   
+    "user":{
+        "key":"./config/key",
+        "expiredTime":10800000
+    },
+    "redis":{
+        "host":"127.0.0.1",
+        "port":6379,
+        "maxIdle":50,
+        "maxActive":50,
+        "wait": true,
+        "idleTimeout":240
+    },
+    "db":{
+        "debug":true,
+        "dialect":"mysql",
+        "user":"root",
+        "password":"root",
+        "host":"127.0.0.1:3306",
+        "dbName":"game",
+        "parseTime":true,
+        "charset":"utf8",
+        "maxActive":100,
+        "maxIdle":50,
+        "maxLifeTime":240
+    }
+    
+}	

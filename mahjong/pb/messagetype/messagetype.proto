@@ -1,0 +1,106 @@
+syntax = "proto2";
+
+
+package messagetype;
+
+enum MessageType {
+    SessionOpen =101;
+    SessionClose =102;
+    //登陆
+    CGLoginType = 1001;
+    GCLoginType =1002;
+    //ping
+    CGPingType =1003;
+    GCPingType=1004;
+    //错误信息
+    GCError = 1101;
+
+    //长沙麻将
+    //加入房间
+    CGJoinRoomType = 2001;
+    GCJoinRoomType = 2002;
+    GCJoinRoomBroadcastType =2003;
+    //选择庄家
+    GCSelectBankerBroadcastType = 2004;
+    
+    //发牌
+    GCDealCardsType = 2005;
+    
+    //小胡检查
+    GCXiaoHuBroadcastType =2006;
+    //打牌
+    CGPlayerPlayCardType =2007;
+    //打牌
+    GCPlayerPlayCardType = 2008;
+    //摸牌
+    GCPlayerMoCardType=2009;
+    //摸牌广播
+    GCPlayerMoCardBroadcastType=2010;
+    //玩家操作
+    GCPlayerOperationsType =2011;
+    //吃
+    GCPlayerChiType =2012;
+    //碰
+    GCPlayerPengType=2013;
+     //补
+    GCPlayerBuType=2014;
+     //杠
+    GCPlayerGangType=2015;
+    //杠摸
+    GCPlayerGangMoType=2016;
+    //胡牌
+    GCPlayerHuType=2017;
+    //等候玩家出牌
+    GCWaitPlayerPlayCardType=2018;
+    //玩家操作
+    CGPlayerOperateType= 2019;
+    //清理桌面
+    GCClearType = 2020;
+    //重新连接
+    GCReconnectPlayerType=2021;
+    //断开连接
+    GCDisconnectPlayerType=2022;
+     //离开房间
+    CGPlayerLeaveType=2023;
+    //离开房间
+    GCPlayerLeaveType=2024;
+      //准备开始
+    CGPlayerStartType=2025;
+    //准备开始
+    GCPlayerStartType=2026;
+      //申请解散
+    CGPlayerDissolveType=2027;
+    //申请解散
+    GCPlayerDissolveType=2028;
+      //申请解散 同意或不同意
+    CGPlayerDissolveAgreeType=2029;
+    //申请解散 同意或不同意
+    GCPlayerDissolveAgreeType=2030;
+    //流局
+    GCLiuJuType =2031;
+    //总结算
+    GCTotalSettleType=2032;
+    //小胡列表
+    GCXiaoHuListType=2033;
+    //小胡
+    CGXiaoHuType=2034;
+    //小胡
+    GCXiaohuType=2035;
+    //小胡过
+    CGXiaoHuPassType=2036;
+    //小胡过
+    GCXiaoHuPassType =2037;
+    //海底牌轮流
+    GCHaiDiAskType=2039;
+    //海底牌回答
+    CGHaiDiAnswerType=2040;
+    //海底牌广播
+    GCHaiDiAnswerType=2041; 
+    //玩家自主暂时离开
+    CGLeaveTimeType=2042;
+    //玩家自主暂时离开广播
+    GCLeaveTimeType=2043; 
+    //聊天
+    CGChatType = 3001;
+    GCChatType = 3002;
+}

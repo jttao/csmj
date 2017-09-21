@@ -1,0 +1,35 @@
+{
+    "round":[
+        {
+            "id":1,
+            "round":8,
+            "cost":1
+        },
+        {   
+             "id":2,
+            "round":16,
+            "cost":2
+        }
+    ],
+    "people":[
+        {
+            "id":1,
+            "people":4
+        },{
+            "id":2,
+            "people":3
+        }
+    ],
+    "zhuaNiao":[
+        {
+            "id":1,
+            "zhuaNiao":2
+        },{
+            "id":1,
+            "zhuaNiao":4
+        },{
+            "id":1,
+            "zhuaNiao":6
+        }
+    ]
+}

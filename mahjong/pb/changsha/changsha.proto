@@ -1,0 +1,609 @@
+//golang 使用
+syntax = "proto2";
+import "game/basic/pb/basic.proto";
+//changsha message optional from 2000-3000
+package changsha;
+
+//加入房间
+message CGJoinRoom {
+   required int64 roomId = 1;  
+}
+
+extend pb.Message {
+   optional CGJoinRoom cgJoinRoom = 2001;
+}
+
+
+//玩家基本信息
+message GCPlayerInfo{
+    //玩家id
+    required int64 playerId = 1;
+    //玩家头像
+    required string image =2;
+    //ip
+    required string ip=3;
+    //分数
+    required int64 score =4;
+    //位置
+    required int32 position=5;
+    //状态0离线，1上线，2暂离
+    required int32 state=6;
+
+    //手牌
+    optional int32 cardNum=7;
+    //手牌数
+    repeated int32 cardList =8;
+    //下的牌
+    repeated int32 playCardList = 9;
+    //碰杠吃
+    repeated Compose composeList=10;
+    //实际状态
+    required int32 actualState=11;
+    //小胡列表
+    repeated int32 xiaoHus=12;
+    //是否听牌
+    required bool ifListen=13;
+    //名称
+    required string name=14;
+    //男女
+    required int32 sex=15;  
+    //名称
+    required string location=16; 
+}
+
+//房间基本信息
+message GCRoomInfo{
+    //房间id
+    required int64 roomId=1;
+    //房间状态
+    required int32 state=2;
+    //当前玩家
+    optional int64 currentPlayerId=3;
+    //可能的操作
+    repeated Operation currentOperationList =4;
+    //剩余牌数
+    optional int32 remains =5;
+    //当前牌 可能是两张或一张 正常是一张 杠后才是两张
+    repeated int32 currentCards=6;
+    //当前牌类型 0：普通牌 1:踩杠牌 2:杠后牌
+    optional int32 currentCardMethod=7;
+    //当前局数
+    optional int32 currentRound=8;
+   //房间名称
+   optional string name=9;
+   //创建者id
+   required int64 ownerId=10;
+   //总局数
+   required int32 totalRound=11;
+   //断线重连的剩余时间
+   required int64 dissolveStartTime=12;
+   //同意玩家
+   repeated int64 aggreeDissolvePlayers=13;
+   //位置
+   required int32 bankerPos=14;
+   //抓鸟
+   required int32 zhuaNiao=15;
+   //庄闲
+   required bool zhuangXian=16;
+   //抓鸟算法
+   required bool zhuaNiaoAlg=17;
+   //是否禁IP
+   required int32 forbidIp=18; 
+    //创建时间
+    required int64 createTime=19;
+    //开房类型
+    optional int32 openRoomType=20;
+    //最后加入时间
+    optional int64 forbidJoinTime =21;
+    //最后游戏时间
+    optional int64 lastGameTime =22;
+}
+
+
+//加入房间
+message GCJoinRoom {
+    //房间基本信息
+    required GCRoomInfo roomInfo =1;
+    //房间牌面信息
+    //玩家列表
+    repeated GCPlayerInfo playerInfoList = 2;
+}
+
+extend pb.Message{
+   optional GCJoinRoom gcJoinRoom = 2010;
+}
+
+// 碰吃杠后的牌
+message Compose {
+    //吃碰胡类型
+    required int32 composeType  =1;
+    //牌
+    repeated int32 cards=2;
+}
+
+
+//广播玩家加入
+message GCJoinRoomBroadcast{
+    required GCPlayerInfo gcPlayerInfo =1;   
+}
+
+extend pb.Message{
+    optional GCJoinRoomBroadcast gcJoinRoomBroadcast = 2020;
+}
+
+//选定庄家
+message GCSelectBankerBroadcast{
+    //庄家位置
+    required int32 bankerPos = 1;
+}
+extend pb.Message{
+    optional GCSelectBankerBroadcast gcSelectBankerBroadcast = 2030;
+}
+
+//发牌
+message GCDealCards{
+    repeated int32 cards =1;
+}
+
+extend pb.Message{
+     optional GCDealCards gcDealCards = 2040;
+}
+
+//小胡 
+message XiaoHu{
+    required int32 xiaoHuType =1;
+    repeated int32 cards =2;   
+}
+
+//玩家小胡
+message XiaohuPlayer{
+    required int64 playerId=1;
+    repeated XiaoHu xiaoHuList =2;
+}
+
+//小胡广播
+message GCXiaoHuBroadcast{
+    repeated XiaohuPlayer xiaohuPlayerList=1;
+}
+
+extend pb.Message{
+    optional GCXiaoHuBroadcast gcXiaoHuBroadcast = 2050;
+}
+
+
+//打牌
+message CGPlayerPlayCard{
+    required int32 card =1;
+}
+
+extend pb.Message{
+    optional CGPlayerPlayCard cgPlayerPlayCard = 2060;
+}
+
+//打牌
+message GCPlayerPlayCard{
+    //玩家id
+    required int64 playerId=1;
+    //打的牌
+    required int32 card =2;
+}
+
+extend pb.Message{
+    optional GCPlayerPlayCard gcPlayerPlayCard = 2070;
+}
+
+//摸牌
+message GCPlayerMoCard{
+    required int32 card =1;
+}
+
+extend pb.Message{
+    optional GCPlayerMoCard gcPlayerMoCard = 2080;
+}
+
+
+//摸牌广播
+message GCPlayerMoCardBroadcast{
+    required int64 playerId =1;
+}
+
+extend pb.Message{
+    optional GCPlayerMoCardBroadcast gcPlayerMoCardBroadcast = 2090;
+}
+
+//玩家可以操作的行为
+message Operation{
+    //玩家可以操作类型
+    required int32 operationType=1;
+    //需要的牌
+    repeated int32 cardList=2;
+    //目标牌
+    required int32 targetCard=3;
+    //目标牌索引
+    required int32 targetIndex=4;
+}
+
+//玩家可以操作的行为发送
+message GCPlayerOperations{
+     repeated Operation operationList =1;
+}
+
+extend pb.Message{
+    optional GCPlayerOperations gcPlayerOperations = 2100;
+}
+
+
+
+//吃
+message GCPlayerChi{
+    //玩家id
+    required int64 playerId =1;
+    //吃的牌
+    required int32 card =2;
+    //吃的列表
+    repeated int32 cardList =3;
+}
+
+extend pb.Message{
+    optional GCPlayerChi gcPlayerChi = 2110;
+}
+
+
+//碰 
+message GCPlayerPeng{
+    //玩家id
+    required int64 playerId =1;
+    //碰的牌
+    required int32 card =2;
+}
+
+extend pb.Message{
+    optional GCPlayerPeng gcPlayerPeng = 2120;
+}
+
+
+//杠
+message GCPlayerGang{
+    //玩家id
+    required int64 playerId =1;
+    //杠的牌
+    required int32 card =2;
+    //杠的类型
+    required int32 gangType=3;
+}
+
+extend pb.Message{
+    optional GCPlayerGang gcPlayerGang = 2130;
+}
+
+
+
+
+//补
+message GCPlayerBu{
+    //玩家id
+    required int64 playerId =1;
+    //补的牌
+    required int32 card =2;
+    //补的类型
+    required int32 buType=3;
+}
+
+extend pb.Message{
+    optional GCPlayerBu gcPlayerBu = 2140;
+}
+
+
+//单局结算分数
+message RoundSettlePlayerInfo{
+    //玩家id
+    required int64 playerId =1;
+    //吃碰杠的牌
+    repeated Compose composeList =2;
+    //手上的牌
+    repeated int32 cardList=3;
+    //分数输赢
+    required int64 score=4;
+    //小胡
+    repeated int32 xiaoHuList=5;
+} 
+
+//胡牌
+message Hu{
+    //胡牌类型
+    required int32 huType=1;
+    //玩家id
+    required int64 playerId =2;
+}
+
+//胡
+message GCPlayerHu{
+    repeated Hu huList =1;
+    repeated RoundSettlePlayerInfo settlePlayerList=2;
+    required int32 card=3;
+      //鸟牌
+    repeated int32 niaoPais=4;
+    //中鸟玩家
+    repeated int64 niaoPaiPlayers=5;
+        //点炮玩家id
+    required int64 dianPaoPlayerId=6;
+  
+}
+
+extend pb.Message{
+    optional GCPlayerHu gcPlayerHu = 2150;
+}
+
+
+//等候玩家出牌
+message GCWaitPlayerPlayCard{
+    //玩家id
+    required int64 playerId=1;
+}
+
+extend pb.Message{
+    optional GCWaitPlayerPlayCard gcWaitPlayerPlayCard = 2160;
+}
+
+//玩家操作
+message CGPlayerOperate{
+    required Operation operation=1;
+}
+extend pb.Message{
+    optional CGPlayerOperate cgPlayerOpreate = 2170;
+}
+
+//清理桌面
+message GCClear{
+}
+extend pb.Message{
+    optional GCClear gcClear = 2180;
+}
+
+//玩家重新连接
+message GCReconnectPlayer{
+    required int64 playerId =1;
+}
+
+extend pb.Message{
+    optional GCReconnectPlayer gcReconnectPlayer= 2190;
+}
+
+//玩家断开连接
+message GCDisconnectPlayer{
+    required int64 playerId=1;
+}
+extend pb.Message{
+    optional GCDisconnectPlayer gcDisconnectPlayer= 2200;
+}
+
+//杠后摸的牌
+message GCPlayerGangMo{
+    //玩家id
+    required int64 playerId =1;
+    //杠后摸的牌
+    repeated int32 card =2;
+}
+
+extend pb.Message{
+    optional GCPlayerGangMo gcPlayerGangMo = 2210;
+}
+
+//离开房间
+message CGPlayerLeave{
+}
+extend pb.Message{
+    optional CGPlayerLeave cgPlayerLeave=2220;
+}
+
+//离开房间
+message GCPlayerLeave{
+    required int64 playerId=1;
+}
+
+extend pb.Message{
+    optional GCPlayerLeave gcPlayerLeave=2230;
+}
+
+//准备开始
+message CGPlayerStart{
+}
+
+extend pb.Message{
+    optional CGPlayerStart cgPlayerStart=2240;
+}
+
+//准备开始
+message GCPlayerStart{
+    required int64 playerId=1;
+}
+
+extend pb.Message{
+    optional GCPlayerStart gcPlayerStart=2250;
+}
+
+//申请解散房间
+message CGPlayerDissolve{
+    required int64 playerId=1;
+}
+
+extend pb.Message{
+    optional CGPlayerDissolve cgPlayerDissolve=2260;
+}
+
+//申请解散房间
+message GCPlayerDissolve{
+    required int64 playerId=1;
+}
+
+extend pb.Message{
+    optional GCPlayerDissolve gcPlayerDissolve=2270;
+}
+
+//同意或拒绝
+message CGPlayerDissolveAgree{
+    required bool agree=1;
+}
+
+extend pb.Message{
+    optional CGPlayerDissolveAgree cgPlayerDissolveAgree=2280;
+}
+
+//同意或拒绝
+message GCPlayerDissolveAgree{
+    required bool agree=1;
+    required int64 playerId=2;
+}
+
+extend pb.Message{
+    optional GCPlayerDissolveAgree gcPlayerDissolveAgree=2290;
+}
+
+//流局
+message GCLiuJu{
+    repeated RoundSettlePlayerInfo settlePlayerList=1;
+}
+
+extend pb.Message{
+    optional GCLiuJu gcLiuJu=2300;
+}
+
+//结算
+message SettleInfo{
+    required int32 settleType=1;
+    required int32 num=2; 
+}
+
+//总结算玩家数据
+message TotalSettlePlayerInfo{
+    repeated SettleInfo settleInfoList=1;
+    required int32 totalscore =2;
+    required int64 playerId=3;
+}
+
+//总结算
+message GCTotalSettle{
+    repeated TotalSettlePlayerInfo totalSettlePlayerInfoList=1;
+}
+
+extend  pb.Message {
+      optional GCTotalSettle gcTotalSettle=2310;  
+}
+
+
+//小胡列表
+message GCXiaoHuList{
+     repeated int32 xiaoHus =1;
+}
+
+extend pb.Message{
+    optional GCXiaoHuList gcXiaoHuList=2320;
+}
+
+
+//小胡
+message CGXiaoHu{
+    required int32 xiaoHu=1;
+}
+
+extend pb.Message{
+    optional CGXiaoHu cgXiaoHu=2330;
+}
+
+//小胡
+message GCXiaoHu{
+    required int64 playerId=1;
+    required XiaoHu xiaoHu=2;
+}
+extend pb.Message{
+    optional GCXiaoHu gcXiaohu=2340;
+}
+
+//小胡过
+message CGXiaoHuPass{
+    required int64 playerId=1;
+}
+
+extend pb.Message{
+    optional CGXiaoHuPass cgXiaoHuPass=2350;
+}
+
+//小胡过
+message GCXiaoHuPass{
+    required int64 playerId=1;
+}
+
+extend pb.Message{
+    optional GCXiaoHuPass gcXiaoHuPass=2360;
+}
+
+
+//海底牌轮流
+message GCHaiDiAsk{
+    required int64 playerId=1;
+}
+
+extend pb.Message{
+    optional GCHaiDiAsk gcHaiDiAsk=2380;
+}
+
+//海底牌轮流
+message CGHaiDiAnswer{
+    required bool flag=1;
+}
+
+extend pb.Message{
+    optional CGHaiDiAnswer cgHaiDiAnswer=2390;
+}
+
+//海底牌广播
+message GCHaiDiAnswer{
+    required int64 playerId=1;
+    required bool flag=2;
+    optional int32 card=3;
+}
+
+extend pb.Message{
+    optional GCHaiDiAnswer gcHaiDiAnswer=2400;
+} 
+
+//自主离开
+message CGLeaveTime{ 
+    required bool flag=1;
+}
+
+extend pb.Message{
+    optional CGLeaveTime cgLeaveTime=2410;
+}
+
+//自主离开广播
+message GCLeaveTime{
+    required int64 playerId=1; 
+    optional bool flag=2;
+}
+
+extend pb.Message{
+    optional GCLeaveTime gcLeaveTime=2420;
+}
+
+//聊天
+message CGChat{
+    required int32 typ =1;
+    required bytes content=2;
+}
+
+extend pb.Message{
+    optional CGChat cgChat = 3001;
+}
+
+
+
+message GCChat{
+    required int32 typ=1;
+    required bytes content=2;
+    required int64 sender=3;
+}
+
+extend pb.Message {
+    optional GCChat gcChat = 3002;
+}

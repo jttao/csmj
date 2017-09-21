@@ -1,0 +1,38 @@
+{
+    "host":"0.0.0.0",
+    "port":81,
+    "changsha":{
+        "template":"./config/template.json",
+        "room":{
+             "roomManageCenter":"http://127.0.0.1:4000"
+        }
+    },
+    "roommanage":{
+        "roomManageCenter":"127.0.0.1:4000"
+    },
+
+    "user":{
+        "key":"./config/key",
+        "expiredTime":3600000
+    },
+    "redis":{
+        "host":"127.0.0.1",
+        "port":6379,
+        "maxIdle":50,
+        "maxActive":50,
+        "wait": true,
+        "idleTimeout":240
+
+    },
+    "db":{
+        "debug":true,
+        "dialect":"mysql",
+        "user":"root",
+        "password":"root",
+        "host":"127.0.0.1:3306",
+        "dbName":"game",
+        "parseTime":true,
+        "charset":"utf8"
+    }
+    
+}	
