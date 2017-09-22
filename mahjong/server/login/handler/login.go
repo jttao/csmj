@@ -80,9 +80,8 @@ func HandleLogin(s session.Session, msg *pb.Message) error {
 		pl.Session().Close()
 		s.Close()
 		return nil
-	}
-
-	roomId, _, _, _, maxPlayer, round, roomConfig,forbidIp,openRoomType,roomTime,maxRoomTime,err := mahjongContext.RoomManageClient.Query(playerId)
+	}  
+	roomId, _, _, _, maxPlayer, round, roomConfig,forbidIp,openRoomType,createTime,forbidJoinTime,lastGameTime,ownerId,err := mahjongContext.RoomManageClient.Query(playerId)
 	if err != nil {
 		//TODO 发送异常信息
 		log.WithFields(
@@ -121,7 +120,7 @@ func HandleLogin(s session.Session, msg *pb.Message) error {
 			return err
 		}
 		
-		r = changsha.NewRoom(mahjongContext.ServerCfg.Room, cf, maxPlayer, round, roomId, forbidIp,openRoomType,roomTime,maxRoomTime,room.NewRoomDelegate(mahjongContext.RoomManager, mahjongContext.DB))
+		r = changsha.NewRoom(mahjongContext.ServerCfg.Room, cf, maxPlayer, round, roomId, forbidIp,openRoomType,createTime,forbidJoinTime,lastGameTime,ownerId,room.NewRoomDelegate(mahjongContext.RoomManager, mahjongContext.DB))
 		if flag := mahjongContext.RoomManager.AddRoom(r); !flag {
 			log.Error("创建房间失败")
 			return nil
@@ -136,7 +135,7 @@ func HandleLogin(s session.Session, msg *pb.Message) error {
 				"round":      round,
 				"roomId":     roomId,
 				"roomConfig": roomConfig,
-			}).Info("创建房间成功")
+		}).Info("创建房间成功")
 		//启动房间数据处理
 		roomProcessor := mahjong.NewRoomProcessor(r, 10, time.Millisecond*20, mahjongContext.Dispatcher)
 		roomProcessor.Start()
@@ -192,7 +191,7 @@ func HandleLogin(s session.Session, msg *pb.Message) error {
 			}).Info("玩家重新连接")
 		r.PlayerReconnect(pl)
 		return nil
-	} 
+	}   
 	ip := pl.Session().Ip() 
 	rp = changsha.NewPlayer(playerId, ip, user.Name, user.Image, user.Sex , user.Location , pl)
 	log.WithFields(

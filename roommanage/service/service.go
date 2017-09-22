@@ -161,43 +161,6 @@ func (rms *roomManageService) IfForbidIp(rid int64,ip string) bool {
 	return false
 }
 
-func (rms *roomManageService) Start() error {
-	go func() {
-		log.Info("房间服务开始")
-	Loop:
-		for {
-			select {
-			case <-time.After(time.Minute * 5):
-				{
-					rms.tick()
-				}
-			case <-rms.done:
-				{
-					break Loop
-				}
-			}
-		}
-		log.Info("房间服务结束")
-	}()
-	return nil
-}
-
-func (rms *roomManageService) tick() {
-	rms.rwm.Lock()
-	defer rms.rwm.Unlock()
-	log.Info("房间服务心跳") 
-	for _, r := range rms.roomsMap {
-		if r.IfShouldRemove() {
-			rms.DestroyRoom(r.Id())
-		}
-	} 
-}
-
-func (rms *roomManageService) Stop() {
-	log.Info("房间服务正在结束")
-	rms.done <- struct{}{}
-}
-
 func (rms *roomManageService) AutoRoom(roomType RoomType, pId int64, maxPlayers int, round int, cost int, roomConfig string,forbidIp int,ip string,openRoomType OpenRoomType) (Room, error) {
 	rms.rwm.Lock()
 	defer rms.rwm.Unlock()
@@ -553,6 +516,46 @@ func (rms *roomManageService) listAgentRooms(agentId int64) (rooms []Room) {
 	}	
 	return
 }
+
+
+
+func (rms *roomManageService) Start() error {
+	go func() {
+		log.Info("房间服务开始")
+	Loop:
+		for {
+			select {
+			case <-time.After(time.Minute * 5):
+				{
+					rms.tick()
+				}
+			case <-rms.done:
+				{
+					break Loop
+				}
+			}
+		}
+		log.Info("房间服务结束")
+	}()
+	return nil
+}
+
+func (rms *roomManageService) tick() {
+	rms.rwm.Lock()
+	defer rms.rwm.Unlock()
+	log.Info("房间服务心跳") 
+	for _, r := range rms.roomsMap {
+		if r.IfShouldRemove() {
+			rms.DestroyRoom(r.Id())
+		}
+	} 
+}
+
+func (rms *roomManageService) Stop() {
+	log.Info("房间服务正在结束")
+	rms.done <- struct{}{}
+}
+
 
 //---------
 func NewRoomManageService(config *RoomManageConfig, db gamedb.DBService, rs gameredis.RedisService) RoomManageService {

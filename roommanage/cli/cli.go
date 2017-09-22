@@ -119,11 +119,11 @@ func start(ctx *cli.Context) {
 	}
 
 	csrs := roommanageservice.NewRoomManageService(sc.RoomManage, dbService, redisService)
-
+	err = rms.Start() 
 	if err != nil {
 		log.Fatalln("init room mananage failed:", err)
 	}
-
+	
 	addr := fmt.Sprintf("%s:%d", sc.Host, sc.Port)
 	router := mux.NewRouter()
 	subrouter := router.PathPrefix(apiPath).Subrouter()

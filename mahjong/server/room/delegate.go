@@ -685,31 +685,34 @@ func (rd *RoomDelegate) OnRoomSettle(r *changsha.Room) {
 	}
 }
 
-func (rd *RoomDelegate) OnRoomEnd(r *changsha.Room) {
-	msg := &pb.Message{}
-	msgType := int32(messagetypepb.MessageType_GCTotalSettleType)
-	msg.MessageType = &msgType
-	gcTotalSettle := buildGCTotalSettle(r)
-
-	err := proto.SetExtension(msg, changshapb.E_GcTotalSettle, gcTotalSettle)
-	if err != nil {
-		panic(err)
+func (rd *RoomDelegate) OnRoomEnd(r *changsha.Room,start bool) {
+	
+	if start {
+		msg := &pb.Message{}
+		msgType := int32(messagetypepb.MessageType_GCTotalSettleType)
+		msg.MessageType = &msgType
+		gcTotalSettle := buildGCTotalSettle(r)
+	
+		err := proto.SetExtension(msg, changshapb.E_GcTotalSettle, gcTotalSettle)
+		if err != nil {
+			panic(err)
+		}
+	
+		msgBytes, err := proto.Marshal(msg)
+		if err != nil {
+			panic(err)
+		}
+	
+		broadcast(r, msgBytes)
+	
+		err = rd.saveRoom(r)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err.Error(),
+			}).Warn("save room error")
+		} 
 	}
-
-	msgBytes, err := proto.Marshal(msg)
-	if err != nil {
-		panic(err)
-	}
-
-	broadcast(r, msgBytes)
-
-	err = rd.saveRoom(r)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"error": err.Error(),
-		}).Warn("save room error")
-	}
-
+	
 	rp := mahjong.RoomProcessorInContext(r.Context())
 	rp.Stop()
 

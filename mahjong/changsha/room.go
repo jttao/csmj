@@ -106,7 +106,7 @@ type RoomDelegate interface {
 	OnRoomPlayerDissolve(room *Room, player Player)
 	OnRoomPlayerDissolveAgree(room *Room, player Player, flag bool)
 	OnRoomLiuJu(room *Room)
-	OnRoomEnd(room *Room)
+	OnRoomEnd(room *Room,start bool)
 	OnRoomHaiDiAsk(room *Room, pl Player)
 	OnRoomHaiDiAnswer(room *Room, pl Player, c *card.Card, flag bool)
 	OnRoomSettle(room *Room)
@@ -133,7 +133,7 @@ type CustomRoomConfig struct {
 } 
 
 //创建新房间
-func NewRoom(config *RoomConfig, customConfig *CustomRoomConfig, numPlayer int, round int, roomId int64,forbidIp int,openRoomType int,roomTime int64,maxRoomTime int64,rd RoomDelegate) *Room {
+func NewRoom(config *RoomConfig, customConfig *CustomRoomConfig, numPlayer int, round int, roomId int64,forbidIp int,openRoomType int, createTime int64, forbidJoinTime int64,lastGameTime int64,ownerId int64,rd RoomDelegate) *Room {
 	r := &Room{
 		config:       config,
 		customConfig: customConfig,
@@ -142,12 +142,14 @@ func NewRoom(config *RoomConfig, customConfig *CustomRoomConfig, numPlayer int, 
 	r.deck = NewDeck()
 	r.roomId = roomId
 	r.delegate = rd
-	r.roomTime = roomTime
-	r.maxRoomTime = maxRoomTime 
+	r.openRoomType = openRoomType
+	r.createTime = createTime
+	r.forbidJoinTime = forbidJoinTime
+	r.lastGameTime = lastGameTime
+	r.ownerId = ownerId
 	r.init()
 	r.totalRound = int32(round)
 	r.forbidIp = int32(forbidIp) 
-	r.openRoomType = openRoomType
 	r.ctx = context.Background()
 	return r
 }
@@ -170,8 +172,8 @@ type Room struct {
 
 	//房间id
 	roomId int64
-	//房间主人
-	ownerPlayer Player
+	//房间ID
+	ownerId int64 
 	//玩家管理器
 	playerManager RoomPlayerManager
 	//牌组
@@ -221,11 +223,7 @@ type Room struct {
 	//鸟牌id
 	niaoPaiPlayerIds []int64
 
-	forbidIp int32 
-	
-	roomTime int64 
-	
-	maxRoomTime int64  
+	forbidIp int32  
 	//房间类型
 	openRoomType int
 	//禁止加入时间
@@ -261,8 +259,8 @@ func (r *Room) RoomId() int64 {
 	return r.roomId
 }
 
-func (r *Room) OwnerPlayer() Player {
-	return r.ownerPlayer
+func (r *Room) OwnerId() int64 {
+	return r.ownerId
 }
 
 func (r *Room) Deck() Deck {
@@ -356,7 +354,7 @@ func (r *Room) NiaoPaiPlayerIds() []int64 {
 //tick
 func (r *Room) Tick() {
 
-	now := time.Now().UnixNano() / int64(time.Millisecond)
+	now := r.now()
 
 	//判断是否在申请解散中
 	if r.ifDissolve() {
@@ -372,11 +370,19 @@ func (r *Room) Tick() {
 		return
 	}
 
+	//是否超过游戏时间
+	if now >= r.lastGameTime {
+		r.LiuJu()
+		return
+	}
+
 	elapse := now - r.lastTime
 	switch r.state {
 	case RoomStateInit:
 		{
-			
+			if now >= r.forbidJoinTime {
+				r.autoLeaveRoom()
+			}
 		}
 	case RoomStateWait:
 		{
@@ -539,11 +545,55 @@ func (r *Room) ifEnd() bool {
 	return r.state == RoomStateEnd
 }
 
-//玩家加入
-func (r *Room) PlayerJoin(p Player) bool {
-	if r.state == RoomStateEnd {
+//离开房间
+func (r *Room) LeavePlayer(p Player) bool {
+	//只有还没有开始的时候才可以退出
+	if r.state != RoomStateInit {
 		return false
 	}
+
+	tp := r.playerManager.GetPlayerById(p.Id())
+	//已经不存在了
+	if tp == nil {
+		return false
+	}
+
+	return r.leaveRoomPlayer(tp)
+}
+
+//自动解散
+func (r *Room) autoLeaveRoom() {
+	if r.openRoomType == 0 {
+		ownerPlayer := r.playerManager.GetPlayerById(r.ownerId)
+		r.leaveRoomPlayer(ownerPlayer)
+	} else {
+		r.end(false)
+	}
+}
+
+//离开房间
+func (r *Room) leaveRoomPlayer(tp Player) bool {
+	if tp == nil {
+		r.end(false)
+		return true
+	}
+	flag := r.PlayerLeave(tp)
+	if flag {
+		if r.openRoomType == 0 {
+			if tp.Id() == r.ownerId {
+				//解散房间
+				r.end(false)
+			}
+		}   
+	}
+	return flag
+}
+
+//玩家加入
+func (r *Room) PlayerJoin(p Player) bool {
+	if r.state != RoomStateInit {
+		return false
+	} 
 	r.logger.WithFields(log.Fields{
 		"房间状态": r.state.String(),
 		"玩家":   p.Id(),
@@ -567,9 +617,9 @@ func (r *Room) PlayerJoin(p Player) bool {
 	}).Info("玩家加入房间")
 
 	//设置房间主人
-	if r.playerManager.CurrentNumPlayers() == 1 {
-		r.ownerPlayer = p
-	}
+	//if r.playerManager.CurrentNumPlayers() == 1 {
+	//	r.ownerPlayer = p
+	//}
 
 	r.delegate.OnRoomPlayerJoin(r, p)
 	r.PrepareStart(p)
@@ -578,14 +628,16 @@ func (r *Room) PlayerJoin(p Player) bool {
 
 //玩家离开
 func (r *Room) PlayerLeave(p Player) bool {
-	if r.state == RoomStateEnd {
+	//只有还没有开始的时候才可以退出
+	if r.state != RoomStateInit {
 		return false
-	}
+	}   
 	r.logger.WithFields(log.Fields{
 		"房间状态": r.state.String(),
 		"玩家":   p.Id(),
 		"玩家列表": fmt.Sprintf("%s", r.playerManager.Players()),
 	}).Debug("玩家请求离开房间")
+
 	tp := r.playerManager.GetPlayerById(p.Id())
 	if tp == nil {
 		r.logger.WithFields(log.Fields{
@@ -595,6 +647,7 @@ func (r *Room) PlayerLeave(p Player) bool {
 		}).Warn("玩家请求离开房间, 玩家不存在")
 		return false
 	}
+
 	if !r.ifCanLeave() {
 		r.logger.WithFields(log.Fields{
 			"房间状态": r.state.String(),
@@ -603,7 +656,7 @@ func (r *Room) PlayerLeave(p Player) bool {
 		}).Warn("玩家不能离开房间")
 		return false
 	}
-
+	
 	r.delegate.OnRoomPlayerLeave(r, p)
 
 	flag := r.playerManager.RemovePlayer(p)
@@ -616,8 +669,10 @@ func (r *Room) PlayerLeave(p Player) bool {
 		"玩家":   p.Id(),
 		"玩家列表": fmt.Sprintf("%s", r.playerManager.Players()),
 	}).Info("玩家离开房间")
-	now := time.Now().UnixNano() / int64(time.Millisecond)
+	
+	now := r.now()
 	r.enterInitState(now)
+	
 	return true
 }
 
@@ -801,10 +856,7 @@ func (r *Room) initLogger() {
 //初始化
 func (r *Room) init() {
 	r.initLogger()
-	now := r.now()
-	r.createTime = now  
-	r.forbidJoinTime = r.createTime + r.roomTime*int64(time.Second/time.Millisecond) 
-	r.lastGameTime = r.createTime + r.maxRoomTime*int64(time.Second/time.Millisecond) 
+	now := r.now() 
 	r.enterInitState(now)
 }
 
@@ -1031,7 +1083,7 @@ func (r *Room) PlayerXiaoHuPass(p Player) {
 //等候玩家小胡操作
 func (r *Room) waitPlayerXiaoHuAction() {
 
-	now := time.Now().UnixNano() / int64(time.Millisecond)
+	now := r.now()
 	//发送消息 等待当前玩家小胡信息
 	r.enterWaitPlayerXiaoHuAction(now)
 	r.delegate.OnRoomXiaoHu(r)
@@ -1047,7 +1099,7 @@ func (r *Room) waitPlayerPlay() {
 		"牌的索引": r.currentCardPlayOrder.String(),
 		"当前牌":  fmt.Sprintf("%s", r.currentCards),
 	}).Info("等候玩家打牌")
-	now := time.Now().UnixNano() / int64(time.Millisecond)
+	now := r.now()
 	r.enterWaitPlayerPlay(now)
 	//发送消息 等待当前玩家打牌
 	r.delegate.OnRoomWaitPlayerPlay(r, r.currentPlayer)
@@ -1063,7 +1115,7 @@ func (r *Room) waitPlayerAction() {
 		"牌的索引": r.currentCardPlayOrder.String(),
 		"当前牌":  fmt.Sprintf("%s", r.currentCards),
 	}).Info("等候玩家操作")
-	now := time.Now().UnixNano() / int64(time.Millisecond)
+	now := r.now()
 	r.enterWaitPlayerAction(now)
 	//发送消息 等待当前玩家行动
 	r.delegate.OnRoomWaitPlayerAction(r)
@@ -2234,7 +2286,7 @@ func (r *Room) liuJu() {
 	}
 
 	//发送总结算
-	r.end()
+	r.end(true)
 }
 
 //抓鸟
@@ -2320,10 +2372,20 @@ func (r *Room) settle() {
 
 	r.afterPlayerAction()
 
-	//判断是否结束
-	if r.currentRound == r.totalRound {
-		r.end()
-	}
+	//判断是否结束 
+	if r.totalRound != 0 {
+		if r.currentRound == r.totalRound { 
+			r.end(true) 
+		}
+	} else {
+		for _, pl := range r.playerManager.Players() {
+			if pl.Score() <= 0 {
+				r.end(true)
+				break
+			}
+		}
+	} 
+
 }
 
 //补充小胡操作
@@ -2454,7 +2516,7 @@ func (r *Room) PrepareStart(p Player) {
 	}
 	p.Prepare()
 	r.delegate.OnRoomPlayerStart(r, p)
-	now := time.Now().UnixNano() / int64(time.Millisecond)
+	now := r.now()
 	//判断是否全部准备了
 	if r.ifCanStart() {
 		r.clear()
@@ -2463,23 +2525,25 @@ func (r *Room) PrepareStart(p Player) {
 }
 
 //结束
-func (r *Room) end() {
-	r.logger.WithFields(log.Fields{
-		"房间状态": r.state.String(),
-		"当前局数": r.currentRound,
-		"总局数":  r.totalRound,
-		"玩家列表": fmt.Sprintf("%s", r.playerManager.Players()),
-	}).Info("房间总结算")
+func (r *Room) end(start bool) {
+	if start { 
+		r.logger.WithFields(log.Fields{
+			"房间状态": r.state.String(),
+			"当前局数": r.currentRound,
+			"总局数":  r.totalRound,
+			"玩家列表": fmt.Sprintf("%s", r.playerManager.Players()),
+		}).Info("房间总结算")
 
-	for _, pl := range r.playerManager.Players() {
-		pl.End()
+		for _, pl := range r.playerManager.Players() {
+			pl.End()
+		}
+
+		now := r.now()
+		//进入结束状态
+		r.enterEnd(now)
 	}
-
-	now := r.now()
-	//进入结束状态
-	r.enterEnd(now)
 	//回调
-	r.delegate.OnRoomEnd(r)
+	r.delegate.OnRoomEnd(r,start)
 }
 
 //当前时间
