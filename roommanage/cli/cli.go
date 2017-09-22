@@ -117,9 +117,10 @@ func start(ctx *cli.Context) {
 	if err != nil {
 		log.Fatalln("init user service failed:", err)
 	}
-
+	
 	csrs := roommanageservice.NewRoomManageService(sc.RoomManage, dbService, redisService)
-	err = rms.Start() 
+	err = csrs.Start() 
+
 	if err != nil {
 		log.Fatalln("init room mananage failed:", err)
 	}

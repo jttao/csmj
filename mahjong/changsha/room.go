@@ -369,10 +369,10 @@ func (r *Room) Tick() {
 		}
 		return
 	}
-
+	
 	//是否超过游戏时间
 	if now >= r.lastGameTime {
-		r.LiuJu()
+		r.liuJu()
 		return
 	}
 

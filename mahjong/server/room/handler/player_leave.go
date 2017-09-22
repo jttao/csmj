@@ -27,7 +27,7 @@ func handlePlayerLeave(s session.Session, msg *pb.Message) error {
 		log.Fields{
 			"玩家id":   pl.Id(),
 			"房间id":   r.RoomId(),
-			"房间主人id": r.OwnerPlayer().Id(),
+			"房间主人id": r.OwnerId(),
 		}).Debug("接收消息,玩家准备离开")
 
 	roomPlayer := r.RoomPlayerManager().GetPlayerById(pl.Id())
@@ -52,7 +52,7 @@ func handlePlayerLeave(s session.Session, msg *pb.Message) error {
 				log.Fields{
 					"玩家id":   pl.Id(),
 					"房间id":   r.RoomId(),
-					"房间主人id": r.OwnerPlayer().Id(),
+					"房间主人id": r.OwnerId(),
 				}).Debug("准备远程摧毁房间")
 			err := mahjongContext.RoomManageClient.Destroy(r.RoomId(), true)
 			if err != nil {
@@ -60,7 +60,7 @@ func handlePlayerLeave(s session.Session, msg *pb.Message) error {
 					log.Fields{
 						"玩家id":   pl.Id(),
 						"房间id":   r.RoomId(),
-						"房间主人id": r.OwnerPlayer().Id(),
+						"房间主人id": r.OwnerId(),
 						"error":  err.Error(),
 					}).Debug("远程摧毁房间失败")
 			}
@@ -71,7 +71,7 @@ func handlePlayerLeave(s session.Session, msg *pb.Message) error {
 			log.Fields{
 				"玩家id":   pl.Id(),
 				"房间id":   r.RoomId(),
-				"房间主人id": r.OwnerPlayer().Id(),
+				"房间主人id": r.OwnerId(),
 			}).Debug("准备远程离开房间")
 		err := mahjongContext.RoomManageClient.Leave(pl.Id(), r.RoomId())
 		if err != nil {

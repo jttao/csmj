@@ -36,7 +36,7 @@ func buildGCRoomInfo(r *changsha.Room, player changsha.Player) *changshapb.GCRoo
 	gcRoomInfo.CurrentRound = &round
 	name := r.Name()
 	gcRoomInfo.Name = &name
-	ownerId := r.OwnerPlayer().Id()
+	ownerId := r.OwnerId()
 	gcRoomInfo.OwnerId = &ownerId
 	totalRound := r.TotalRound()
 	gcRoomInfo.TotalRound = &totalRound
@@ -53,7 +53,17 @@ func buildGCRoomInfo(r *changsha.Room, player changsha.Player) *changshapb.GCRoo
 
 	forbidIp := r.ForbidIp() 
 	gcRoomInfo.ForbidIp = &forbidIp
-
+	
+	openRoomType := int32(r.GetOpenRoomType())
+	gcRoomInfo.OpenRoomType = &openRoomType
+	
+	createTime := r.CreateTime()
+	gcRoomInfo.CreateTime  = &createTime
+	forbidJoinTime := r.ForbidJoinTime()
+	gcRoomInfo.ForbidJoinTime  = &forbidJoinTime
+	lastGameTime := r.LastGameTime()
+	gcRoomInfo.LastGameTime  = &lastGameTime
+	
 	applyPlayer := r.ApplyDissolvePlayer()
 	if applyPlayer != nil {
 		dissolvePlayers := make([]int64, 0, len(r.AgreeDissolvePlayers()))

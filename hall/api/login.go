@@ -31,7 +31,7 @@ func handleLogin(rw http.ResponseWriter, req *http.Request) {
 			"玩家id": playerId,
 		}).Debug("大厅请求登陆")
 	rmc := roommanageclient.RoomManageClientInContext(req.Context())
-	rId, _, host, port, _, _, _,_,_,_,_,err := rmc.Query(playerId)
+	rId, _, host, port, _, _, _,_,_,_,_,_,_,err := rmc.Query(playerId)
 	if err != nil {
 		log.WithFields(
 			log.Fields{

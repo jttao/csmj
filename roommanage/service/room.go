@@ -50,9 +50,10 @@ type Room interface {
 	IfShouldRemove() bool
 	IfExpiredJoin() bool
 	IfExpired() bool
-	RoomTime() int64
-	MaxRoomTime() int64 
-}
+	CreateTime() int64
+	ForbidJoinTime() int64 
+	LastGameTime() int64 
+} 
 
 type room struct {
 	rwm        sync.RWMutex
@@ -69,9 +70,7 @@ type room struct {
 	openRoomType OpenRoomType 
 	createTime int64 
 	forbidJoinTime int64 
-	lastGameTime int64
-	roomTime int64
-	maxRoomTime int64
+	lastGameTime int64 
 }
 
 func (r *room) Id() int64 {
@@ -131,14 +130,6 @@ func (r *room) ForbidJoinTime() int64 {
 
 func (r *room) LastGameTime() int64 {
 	return r.lastGameTime
-}
-
-func (r *room) RoomTime() int64 {
-	return r.roomTime
-}
-
-func (r *room) MaxRoomTime() int64 {
-	return r.maxRoomTime
 }
 
 func (r *room) IfForbidIp(ip string) bool  {
@@ -256,11 +247,7 @@ func NewRoom(roomTime int64, maxRoomTime int64, id int64, serverId string, roomT
 	r.roomConfig = roomConfig
 	r.cost = cost
 	r.forbidIp = forbidIp 
-	r.openRoomType = openRoomType 
-
-	r.roomTime = roomTime
-	r.maxRoomTime = maxRoomTime
-
+	r.openRoomType = openRoomType   
 	r.createTime = time.Now().UnixNano() / int64(time.Millisecond)
 	r.forbidJoinTime = r.createTime + roomTime*int64(time.Second/time.Millisecond) 
 	r.lastGameTime = r.createTime + maxRoomTime*int64(time.Second/time.Millisecond)

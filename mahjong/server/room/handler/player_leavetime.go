@@ -32,7 +32,7 @@ func handlePlayerLeaveTime(s session.Session, msg *pb.Message) error {
 		log.Fields{
 			"玩家id":   pl.Id(),
 			"房间id":   r.RoomId(),
-			"房间主人id": r.OwnerPlayer().Id(),
+			"房间主人id": r.OwnerId(),
 		}).Debug("接收消息,玩家自主离开")
 
 	extend, err := proto.GetExtension(msg, changshapb.E_CgLeaveTime)
@@ -57,7 +57,7 @@ func handlePlayerLeaveTime(s session.Session, msg *pb.Message) error {
 			log.Fields{
 				"玩家id":   pl.Id(),
 				"房间id":   r.RoomId(),
-				"房间主人id": r.OwnerPlayer().Id(),
+				"房间主人id": r.OwnerId(),
 			}).Debug("准备自离开主房间") 
 		return nil
 	}

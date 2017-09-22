@@ -37,6 +37,9 @@ type RoomManageService interface {
 	AgentCloseRooms(agentId int64) (err error)
 	AgentCloseSingleRoom(agentId int64, roomId int64) (err error)
 
+	Start() error
+	Stop()
+
 }
 
 const (
@@ -200,7 +203,7 @@ func (rms *roomManageService) AutoRoom(roomType RoomType, pId int64, maxPlayers 
 		return nil, nil
 	}
 	
-	roomTime := rms.config.AgentRoomTime
+	roomTime := rms.config.UserRoomTime
 	maxRoomTime := rms.config.MaxRoomTime   
 
 	if openRoomType==OpenRoomTypeAgent {
@@ -243,8 +246,8 @@ func (rms *roomManageService) CreateRoom(roomType RoomType, ownerId int64, maxPl
 	if err != nil {
 		return nil, err
 	}
-
-	roomTime := rms.config.AgentRoomTime
+	
+	roomTime := rms.config.UserRoomTime
 	maxRoomTime := rms.config.MaxRoomTime   
 	
 	if openRoomType==OpenRoomTypeAgent {

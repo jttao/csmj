@@ -734,18 +734,20 @@ func (rd *RoomDelegate) OnRoomEnd(r *changsha.Room,start bool) {
 	log.WithFields(
 		log.Fields{
 			"房间id":   r.RoomId(),
-			"房间主人id": r.OwnerPlayer().Id(),
+			"房间主人id": r.OwnerId(),
 		}).Debug("准备远程摧毁房间")
 	refund := false
 	if r.CurrentRound() <= 1 {
 		refund = true
 	}
-	err = mahjongContext.RoomManageClient.Destroy(r.RoomId(), refund)
+	
+	err := mahjongContext.RoomManageClient.Destroy(r.RoomId(), refund)
+	
 	if err != nil {
 		log.WithFields(
 			log.Fields{
 				"房间id":   r.RoomId(),
-				"房间主人id": r.OwnerPlayer().Id(),
+				"房间主人id": r.OwnerId(),
 				"error":  err.Error(),
 			}).Debug("远程摧毁房间失败")
 	}
@@ -754,7 +756,7 @@ func (rd *RoomDelegate) OnRoomEnd(r *changsha.Room,start bool) {
 func (rd *RoomDelegate) saveRoom(r *changsha.Room) error {
 	rou := &recordmodel.RoomRecordModel{}
 	rou.RoomId = r.RoomId()
-	rou.OwnerId = r.OwnerPlayer().Id()
+	rou.OwnerId = r.OwnerId()
 	for i := 0; i < len(r.RoomPlayerManager().Players()); i++ {
 		pId := r.RoomPlayerManager().Players()[i].Id()
 		switch i {
