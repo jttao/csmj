@@ -31,17 +31,17 @@ func handleLogin(rw http.ResponseWriter, req *http.Request) {
 			"玩家id": playerId,
 		}).Debug("大厅请求登陆")
 	rmc := roommanageclient.RoomManageClientInContext(req.Context())
-	rId, _, host, port, _, _, _,_, err := rmc.Query(playerId)
+	rId, _, host, port, _, _, _,_,_,_,_,err := rmc.Query(playerId)
 	if err != nil {
 		log.WithFields(
 			log.Fields{
 				"玩家id":  playerId,
 				"error": err,
-			}).Error("大厅请求登陆失败")
+			}).Error("大厅请求登陆失败1")
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
+	
 	us := userservice.UserServiceInContext(req.Context())
 	user, err := us.GetUserById(playerId)
 	if err != nil {
@@ -49,7 +49,7 @@ func handleLogin(rw http.ResponseWriter, req *http.Request) {
 			log.Fields{
 				"玩家id":  playerId,
 				"error": err,
-			}).Error("大厅请求登陆失败")
+			}).Error("大厅请求登陆失败2")
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}

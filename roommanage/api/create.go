@@ -30,6 +30,7 @@ type createRoomResponse struct {
 	RoomId int64  `json:"roomId"`
 	Host   string `json:"host"`
 	Port   int    `json:"port"`
+	OpenRoomType int `json:"openRoomType"`
 }
 
 func handleCreate(rw http.ResponseWriter, req *http.Request) {
@@ -222,8 +223,9 @@ func handleCreate(rw http.ResponseWriter, req *http.Request) {
 	result.RoomId = r.Id()
 	result.Host = sc.Host
 	result.Port = sc.Port
+	result.OpenRoomType = int(r.GetOpenRoomType())
 	rr := gamehttputils.NewSuccessResult(result)
-
+	
 	httputils.WriteJSON(rw, http.StatusOK, rr)
 	log.WithFields(
 		log.Fields{

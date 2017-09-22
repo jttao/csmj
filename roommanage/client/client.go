@@ -14,7 +14,7 @@ import (
 
 type RoomManageClient interface {
 	Create(RoomType int, ownerId int, maxPlayers int) (int64, error)
-	Query(playerId int64) (roomId int64, serverId string, host string, port int, maxPlayers int, round int, roomConfig string,forbidIp int,openRoomType int, err error)
+	Query(playerId int64) (roomId int64, serverId string, host string, port int, maxPlayers int, round int, roomConfig string,forbidIp int,openRoomType int,roomTime int64,maxRoomTime int64, err error)
 	Leave(playerId int64, roomId int64) error
 	Destroy(roomId int64, refund bool) error
 }
@@ -49,7 +49,7 @@ func (rmc *roomManageClient) Create(roomType int, ownerId int, maxPlayers int) (
 	return
 }
 
-func (rmc *roomManageClient) Query(playerId int64) (roomId int64, serverId string, host string, port int, maxPlayer int, round int, roomConfig string,forbidIp int,openRoomType int,err error) {
+func (rmc *roomManageClient) Query(playerId int64) (roomId int64, serverId string, host string, port int, maxPlayer int, round int, roomConfig string,forbidIp int,openRoomType int,roomTime int64,maxRoomTime int64,err error) {
 	apiPath := "/api/roommanage/query"
 	apiPath = "http://" + rmc.config.RoomManageCenter + apiPath
 	form := api.QueryForm{
@@ -57,28 +57,28 @@ func (rmc *roomManageClient) Query(playerId int64) (roomId int64, serverId strin
 	}
 	result, err := gamepkghttputils.PostJson(apiPath, nil, form)
 	if err != nil {
-		return 0, "", "", 0, 0, 0, "",0, err
+		return 0, "", "", 0, 0, 0, "",0,0,0,0, err
 	}
 
 	query, ok := result.(map[string]interface{})
 	if !ok {
-		return 0, "", "", 0, 0, 0, "",0, fmt.Errorf("response error")
+		return 0, "", "", 0, 0, 0, "",0,0,0,0, fmt.Errorf("response error")
 	}
 
 	roomId = int64(query["roomId"].(float64))
 	if roomId == 0 {
-		return 0, "", "", 0, 0, 0, "",0, nil
+		return 0, "", "", 0, 0, 0, "",0,0,0,0, nil
 	}
 	if query["round"] == nil {
-		return 0, "", "", 0, 0, 0, "",0, fmt.Errorf("round error")
+		return 0, "", "", 0, 0, 0, "",0,0,0,0, fmt.Errorf("round error")
 	}
 	round = int(query["round"].(float64))
 	if query["roomConfig"] == nil {
-		return 0, "", "", 0, 0, 0, "",0, fmt.Errorf("round config error")
+		return 0, "", "", 0, 0, 0, "",0,0,0,0, fmt.Errorf("round config error")
 	}
 	roomConfig = query["roomConfig"].(string)
 	if query["maxPlayers"] == nil {
-		return 0, "", "", 0, 0, 0, "",0, fmt.Errorf("max players error")
+		return 0, "", "", 0, 0, 0, "",0,0,0,0, fmt.Errorf("max players error")
 	}
 	maxPlayer = int(query["maxPlayers"].(float64))
 
@@ -87,9 +87,12 @@ func (rmc *roomManageClient) Query(playerId int64) (roomId int64, serverId strin
 	port = int(query["port"].(float64))
 	forbidIp = int(query["forbidIp"].(float64))
 	
-	openRoomType = = int(query["openRoomType"].(float64))
+	openRoomType = int(query["openRoomType"].(float64))
+
+	roomTime = int64(query["roomTime"].(float64))
+	maxRoomTime = int64(query["maxRoomTime"].(float64))
 	
-	return roomId, serverId, host, port, maxPlayer, round, roomConfig,forbidIp,openRoomType,nil
+	return roomId, serverId, host, port, maxPlayer, round, roomConfig,forbidIp,openRoomType,roomTime,maxRoomTime,nil
 }
 
 func (rmc *roomManageClient) Leave(playerId int64, roomId int64) error {

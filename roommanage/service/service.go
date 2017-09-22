@@ -249,12 +249,10 @@ func (rms *roomManageService) AutoRoom(roomType RoomType, pId int64, maxPlayers 
 
 	if openRoomType==OpenRoomTypeUser { 
 		r.JoinPlayer(owner)
-	}
-	
+		rms.playersMap[owner.Id()] = owner
+	} 	
 	//缓存
-	rms.roomsMap[r.Id()] = r
-
-	rms.playersMap[owner.Id()] = owner
+	rms.roomsMap[r.Id()] = r 
 	num, ok := rms.servers[r.ServerId()]
 	if !ok {
 		rms.servers[r.ServerId()] = 1
@@ -276,18 +274,7 @@ func (rms *roomManageService) CreateRoom(roomType RoomType, ownerId int64, maxPl
 		return nil, nil
 	}
 	
-	owner := NewPlayer(ownerId, int64(0) , ip)
-	// //创建房间
-	// rm := &roommanagemodel.RoomModel{}
-	// rm.OwnerId = owner.Id()
-	// rm.RoomType = int(roomType)
-	// rm.RoomConfig = roomConfig
-	// rm.Round = round
-	// rm.Cost = cost
-	// tdb := rms.db.DB().Save(rm)
-	// if tdb.Error != nil {
-	// 	return nil, tdb.Error
-	// }
+	owner := NewPlayer(ownerId, int64(0) , ip) 
 	//获取房间号
 	roomId, err := rms.getUsableRoomNum()
 	if err != nil {
@@ -306,12 +293,11 @@ func (rms *roomManageService) CreateRoom(roomType RoomType, ownerId int64, maxPl
 	
 	if openRoomType==OpenRoomTypeUser { 
 		r.JoinPlayer(owner)
+		rms.playersMap[owner.Id()] = owner
 	}
 	
 	//缓存
-	rms.roomsMap[r.Id()] = r
-	rms.playersMap[owner.Id()] = owner
-
+	rms.roomsMap[r.Id()] = r 
 	num, ok := rms.servers[r.ServerId()]
 	if !ok {
 		rms.servers[r.ServerId()] = 1
@@ -534,7 +520,7 @@ func (rms *roomManageService) AgentCloseSingleRoom(agentId int64, roomId int64) 
 		return
 	}
 	
-	if r.OwnerId() != agentId || r.getOpenRoomType() != OpenRoomTypeAgent {
+	if r.OwnerId() != agentId || r.GetOpenRoomType() != OpenRoomTypeAgent {
 		//err = ErrorAgentCloseRoomNoSelf
 		return 
 	}
@@ -559,7 +545,7 @@ func (rms *roomManageService) ListAgentRooms(agentId int64) []Room {
 //列出代理的房间
 func (rms *roomManageService) listAgentRooms(agentId int64) (rooms []Room) {
 	for _, r := range rms.roomsMap {
-		if r.getOpenRoomType() == OpenRoomTypeAgent {
+		if r.GetOpenRoomType() == OpenRoomTypeAgent {
 			if r.OwnerId() == agentId {
 				rooms = append(rooms, r)
 			}

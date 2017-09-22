@@ -25,7 +25,9 @@ type QueryResponse struct {
 	Host       string `json:"host"`
 	Port       int    `json:"port"`
 	ForbidIp   int    `json:"forbidIp"` 
-	OpenRoomType int `json:"openRoomType"`   
+	OpenRoomType int  `json:"openRoomType"`
+	RoomTime 	int64 `json:"roomTime"`
+	MaxRoomTime int64 `json:"maxRoomTime"`
 }
 
 func handleQuery(rw http.ResponseWriter, req *http.Request) {
@@ -44,7 +46,7 @@ func handleQuery(rw http.ResponseWriter, req *http.Request) {
 	}
 	if p == nil {
 		log.WithField("playerId", pId).Warn("玩家不在房间内")
-	} else {
+	} else { 
 		r := rms.GetRoomById(p.RoomId())
 		result.RoomId = p.RoomId()
 		result.OwnerId = r.OwnerId()
@@ -52,7 +54,9 @@ func handleQuery(rw http.ResponseWriter, req *http.Request) {
 		result.Round = r.Round()
 		result.MaxPlayers = r.MaxPlayers()
 		result.ForbidIp = r.ForbidIp() 
-		result.OpenRoomType = int(r.OpenRoomType())
+		result.OpenRoomType = int(r.GetOpenRoomType())
+		result.RoomTime = r.RoomTime()
+		result.MaxRoomTime = r.MaxRoomTime() 
 		sc := rms.GetServerByServerId(r.ServerId())
 		result.Host = sc.Host
 		result.Port = sc.Port

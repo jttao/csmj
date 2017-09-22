@@ -48,7 +48,7 @@ func handleCreate(rw http.ResponseWriter, req *http.Request) {
 	openRoomType := form.OpenRoomType
 
 	roundTemplate := csts.GetRoundTemplateById(roundId)
-
+	
 	if roundTemplate == nil {
 		rw.WriteHeader(http.StatusBadRequest)
 		log.WithFields(
