@@ -688,6 +688,7 @@ func (rd *RoomDelegate) OnRoomSettle(r *changsha.Room) {
 func (rd *RoomDelegate) OnRoomEnd(r *changsha.Room,start bool) {
 	
 	if start {
+
 		msg := &pb.Message{}
 		msgType := int32(messagetypepb.MessageType_GCTotalSettleType)
 		msg.MessageType = &msgType
@@ -710,22 +711,25 @@ func (rd *RoomDelegate) OnRoomEnd(r *changsha.Room,start bool) {
 			log.WithFields(log.Fields{
 				"error": err.Error(),
 			}).Warn("save room error")
-		} 
+		}    
 	}
 	
 	rp := mahjong.RoomProcessorInContext(r.Context())
 	rp.Stop()
 
 	//玩家推出游戏服
+	players := r.RoomPlayerManager().Players()
+
 	for _, pl := range r.RoomPlayerManager().Players() {
 		if pl.Player() == nil {
 			continue
-		}
+		} 
 		err := pl.Player().Session().Close()
 		if err != nil {
 			log.Println("close with error", err.Error())
 		}
-	}
+	} 
+	
 	mahjongContext := mahjong.MahjongInContext(r.Context())
 	//移除房间
 	mahjongContext.RoomManager.RemoveRoom(r)
@@ -736,6 +740,7 @@ func (rd *RoomDelegate) OnRoomEnd(r *changsha.Room,start bool) {
 			"房间id":   r.RoomId(),
 			"房间主人id": r.OwnerId(),
 		}).Debug("准备远程摧毁房间")
+	
 	refund := false
 	if r.CurrentRound() <= 1 {
 		refund = true
@@ -751,6 +756,32 @@ func (rd *RoomDelegate) OnRoomEnd(r *changsha.Room,start bool) {
 				"error":  err.Error(),
 			}).Debug("远程摧毁房间失败")
 	}
+	
+	//设置玩家任务
+	if start {
+
+		for _, pl := range players {
+			
+			if pl.Player() == nil {
+				continue
+			} 
+
+			playerId := pl.Id()
+			score := pl.Score() 
+				
+			err = mahjongContext.RoomManageClient.GameEnd(playerId,score) 
+			if err != nil {
+				log.WithFields(
+					log.Fields{
+						"playerId":   playerId,
+						"score": score,
+						"error":  err.Error(),
+					}).Debug("游戏结束，玩家任务失败")
+			} 			
+		} 
+
+	}
+
 }
 
 func (rd *RoomDelegate) saveRoom(r *changsha.Room) error {
@@ -790,7 +821,7 @@ func (rd *RoomDelegate) saveRoom(r *changsha.Room) error {
 	if tdb.Error != nil {
 		return tdb.Error
 		//log.Error("save round error")
-	}
+	} 
 	return nil
 }
 

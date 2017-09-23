@@ -18,4 +18,7 @@ const (
 	ReasonTypeGM ReasonType = iota
 	ReasonTypeCost
 	ReasonTypeRefund
+	ReasonTypeTask1
+	ReasonTypeTask2
+	ReasonTypeTask3 
 )

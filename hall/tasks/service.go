@@ -44,20 +44,17 @@ type UserTask struct {
 	CreateTime int64 `json:"createTime"` 
 }
 
-type TaskService interface {
-	GetTasks() (tks []*Task,err error) 
-	SetTask(t *Task)  error
-	AddTask(id int32,reward int32,targetNum int32,content string) (t *Task,err error)
+type TaskService interface {  
 	
-	SetUserTask(ut *UserTask) error
+	GetTask(taskId int32) (t *Task, err error) 
+	GetUserTask(userId int64,taskId int32) (us *UserTask, err error) 
+	FinishUserTask(userId int64,taskId int32,state bool) (reward bool,us *UserTask, err error) 
+	
+	RewardUserTask(userId int64,taskId int32) error
 	GetUserTasks(userId int64) (us []*UserTask, err error)
-	GetUserTask(userId int64,taskId int32) (us *UserTask, err error)
-	GetReward(userId int64,taskId int32) (us *UserTask, err error) 
-
-	refresh(us *UserTask, now int64) (err error)
-
-	FinishUserTask(userId int64,taskId int32) (us *UserTask, err error) 
-
+	
+	refresh(us *UserTask, now int64) (flag bool,err error)
+	
 }
 
 type taskService struct {
@@ -65,74 +62,8 @@ type taskService struct {
 	rs gameredis.RedisService 
 }
 
-func (ts *taskService) GetTasks() (tks []*Task,err error) {
-	nms := make([]*model.TaskModel, 0, 4)
-	tdb := ts.db.DB().Find(&nms)
-	if tdb.Error != nil {
-		if tdb.Error == gorm.ErrRecordNotFound {
-			return nil, nil
-		}
-		return nil, tdb.Error
-	} 
-
-	tks = make([]*Task, 0, len(nms))
-	for _, nm := range nms {
-		n := &Task{} 
-		n.Content = nm.Content
-		n.Reward = nm.Reward
-		n.TargetNum = nm.TargetNum
-		n.Id = nm.Id
-		tks = append(tks, n)
-	} 	
-	return tks,nil
-}
-
-func (ts * taskService) SetTask(t *Task) (err error){
-
-	tm := &model.TaskModel{}
-	tdb := ts.db.DB().First(tm,"id=?",t.Id)
-	
-	if tdb.Error != nil {
-		if tdb.Error == gorm.ErrRecordNotFound {
-			return nil
-		}
-		return tdb.Error
-	}
-	
-	tm.Content = t.Content
-	tm.Reward = t.Reward
-	tm.TargetNum = t.TargetNum  
-
-	tdb = ts.db.DB().Model(tm).Update(tm)
-
-	if tdb.Error != nil {
-		if tdb.Error == gorm.ErrRecordNotFound {
-			return nil
-		}
-		return tdb.Error
-	}
-	return nil
-} 
-
-func (ts * taskService) AddTask(id int32,reward int32,targetNum int32,content string) (tm *model.TaskModel,err error) {
-	tm = &model.TaskModel{} 
-	tm.Id = id
-	tm.Reward = reward
-	tm.TargetNum = targetNum
-	tm.Content = content
-	
-	tm.CreateTime = time.Now().UnixNano() / int64(time.Millisecond)
-	tm.UpdateTime = tm.CreateTime 
-	tdb := ts.db.DB().Save(tm)
-
-	if tdb.Error != nil {
-		return nil, tdb.Error
-	}
-
-	return
-}
-
 func (ts *taskService) GetUserTasks(userId int64) (uss []*UserTask, err error) {
+
 	nms := make([]*model.UserTaskModel, 0, 4)
 	tdb := ts.db.DB().Find(&nms,"userId=?",userId)
 	if tdb.Error != nil {
@@ -141,8 +72,10 @@ func (ts *taskService) GetUserTasks(userId int64) (uss []*UserTask, err error) {
 		}
 		return nil, tdb.Error
 	}   
+	now := time.Now().UnixNano() / int64(time.Millisecond)
 	uss = make([]*UserTask, 0, len(nms)) 
 	for _, nm := range nms {
+		
 		n := &UserTask{}
 		n.Id = nm.Id
 		n.TaskId = nm.TaskId
@@ -150,7 +83,9 @@ func (ts *taskService) GetUserTasks(userId int64) (uss []*UserTask, err error) {
 		n.Reward = nm.Reward
 		n.Finish = nm.Finish
 		n.TargetNum = nm.TargetNum
-		uss = append(uss, n)
+		n.UpdateTime = nm.UpdateTime
+		n.CreateTime = nm.CreateTime 
+		uss = append(uss, n)  
 	}  
 	return uss,nil
 }
@@ -174,30 +109,37 @@ func (ts *taskService) GetUserTask(userId int64,taskId int32) (us *UserTask, err
 	us.Reward = utm.Reward
 	us.Finish = utm.Finish 
 	us.TargetNum = utm.TargetNum  
+	us.UpdateTime = us.UpdateTime
+	us.CreateTime = us.CreateTime
 
 	return us,nil
 }
 
-func (ts *taskService) SetUserTask(ut *UserTask) error{ 
+func (ts *taskService) RewardUserTask(userId int64,taskId int32) error{ 
 	utm := &model.UserTaskModel{}
-	tdb := ts.db.DB().First(utm,"taskId=? and userId=?",ut.TaskId,ut.UserId) 
+	tdb := ts.db.DB().First(utm,"taskId=? and userId=?",taskId, userId ) 
 	if tdb.Error != nil {
 		if tdb.Error == gorm.ErrRecordNotFound {
 			return nil
 		}
 		return tdb.Error
 	} 	
-	utm.Finish = ut.Finish
-	utm.Reward = ut.Reward
-	utm.TargetNum = ut.TargetNum   
-	now := time.Now().UnixNano() / int64(time.Millisecond)
-	err := ts.refresh(ut, now) 
+	//是否已经领取奖励
+	if ut.Reward != 0 {
+		return nil
+	}
+	//是否完成
+	if ut.Finish < ut.TargetNum {
+		return nil
+	}   
+
+	t , err := ts.GetTask(taskId) 
 	if err != nil {
-		return err
-	} 
-	if ut.Finish != 0 {
 		return nil
 	} 
+	//设置奖励数据
+	utm.Reward = t.Reward
+	
 	tdb = ts.db.DB().Model(utm).Update(utm) 
 	if tdb.Error != nil {
 		if tdb.Error == gorm.ErrRecordNotFound {
@@ -208,61 +150,99 @@ func (ts *taskService) SetUserTask(ut *UserTask) error{
 	return nil
 }
 
-func (ts *taskService) GetReward(userId int64,taskId int32) (us *UserTask, err error) {
-	
-	us , err = ts.GetUserTask(userId,taskId)
+//完成一次任务
+func (ts *taskService) FinishUserTask(userId int64,taskId int32,state bool) (reward bool, us *UserTask, err error) {
 
-	if err != nil { 
-		return nil,err
-	}
-	
-	if us.Finish < us.TargetNum {
-		return nil,nil
-	}
-
-	if us.Finish==us.TargetNum {
-		return nil,nil
-	}
-	
-	return us,nil
-
-}
-
-func (ts *taskService) FinishUserTask(userId int64,taskId int32) (us *UserTask, err error) {
-	
 	us , err = ts.GetUserTask(userId,taskId)
 
 	if err != nil {
-		return nil , err
+		return false,nil , err
 	}  
 	
-	if us.Finish==us.TargetNum {
-		return us,nil
+	isnew := false
+
+	now := time.Now().UnixNano() / int64(time.Millisecond)
+	
+	//没有记录,添加一条记录
+	if us ==nil {
+		t , err := ts.GetTask(taskId) 
+		if err != nil {
+			return  false,nil,err
+		}   
+		us = &UserTask{} 
+		us.TaskId = taskId
+		us.UserId = userId
+		us.Reward = 0
+		us.Finish = 0
+		us.TargetNum = t.TargetNum
+		us.UpdateTime = now
+		us.CreateTime = now
+		
+		isnew = true
+	
+	}else{
+
+		//是否跨天
+		flag := ts.refresh(us, now)
+		if flag {
+			t , err := ts.GetTask(taskId) 
+			if err != nil {
+				return  false,nil,err
+			} 
+			us.TargetNum = t.TargetNum
+		}
+
 	}
 
-	us.Finish = us.TargetNum 
+	if us.Finish==us.TargetNum {
+		return  false,us,nil
+	}
+
+	count := us.Finish
+
+	if state {
+		count += 1
+		if count>us.TargetNum {
+			count = us.TargetNum
+		}
+	}else{
+		count = 0
+	}   
+	us.Finish = count 
+	utm := convertUserTaskToModel(us)  
 	
-	err = ts.SetUserTask(us)
-	
-	if err != nil {
-		return nil,err
+	//保存数据
+	if isnew {
+		tdb = ts.db.DB().Save(utm) 
+	}else{
+		tdb = ts.db.DB().Model(utm).Update(utm)  
+	}   
+	if tdb.Error != nil {
+		if tdb.Error == gorm.ErrRecordNotFound {
+			return  false,nil,nil
+		}
+		return  false,nil,tdb.Error
 	}  
-	
-	return us,nil
+	reward = false  
+	if us.Finish==us.TargetNum {
+		reward = true 
+	} 	
+	return reward,us,nil
 }
 
-func (ts *taskService) refresh(us *UserTask, now int64) (err error) {
+func (ts *taskService) refresh(us *UserTask, now int64) (flag bool,err error) {
 	//判断是否跨天
 	flag, err :=  pkgtimutils.IsSameDay(now, us.UpdateTime)
 	if err != nil {
-		return
+		return false,err
 	}
 	if flag {
-		return
-	}
+		return false,err
+	} 
 	us.Finish = 0 
+	us.Reward = 0  
 	us.UpdateTime = now 
-	return
+	return true,err
 } 	
 
 func TaskServiceInContext(ctx context.Context) TaskService {

@@ -109,12 +109,14 @@ func start(ctx *cli.Context) {
 	}
 	us := gmservice.NewUserService(db)
 	rcs := gmservice.NewRoomCardService(db, rs)
-
+	ts := gmservice.NewTaskService(db)
+	
 	router := mux.NewRouter()
 	subrouter := router.PathPrefix(apiPath).Subrouter()
 	api.Router(subrouter)
 	n.Use(SetupUserServiceHandler(us))
 	n.Use(SetupRoomCardServiceHandler(rcs))
+	n.Use(SetupTaskServiceHandler(ts))
 
 	n.UseHandler(router)
 	//register interruput handler
@@ -142,6 +144,15 @@ func SetupRoomCardServiceHandler(us gmservice.RoomCardService) negroni.HandlerFu
 	return negroni.HandlerFunc(func(rw http.ResponseWriter, req *http.Request, hf http.HandlerFunc) {
 		ctx := req.Context()
 		nctx := gmservice.WithRoomCardService(ctx, us)
+		nreq := req.WithContext(nctx)
+		hf(rw, nreq)
+	})
+}
+
+func SetupTaskServiceHandler(us gmservice.TaskService) negroni.HandlerFunc {
+	return negroni.HandlerFunc(func(rw http.ResponseWriter, req *http.Request, hf http.HandlerFunc) {
+		ctx := req.Context()
+		nctx := gmservice.WitTaskService(ctx, us)
 		nreq := req.WithContext(nctx)
 		hf(rw, nreq)
 	})
