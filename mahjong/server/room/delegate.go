@@ -719,11 +719,12 @@ func (rd *RoomDelegate) OnRoomEnd(r *changsha.Room,start bool) {
 	//玩家推出游戏服
 	players := r.RoomPlayerManager().Players()
 	
-	for _, pl := range r.RoomPlayerManager().Players() {
+	var maxScore int64
+
+	for _, pl := range players {
 		if pl.Player() == nil {
 			continue
-		} 
-		
+		}   
 		err := mahjongContext.RoomManageClient.Leave(pl.Id(),r.RoomId())
 		if err != nil {
 			log.Println("close with error", err.Error())
@@ -734,6 +735,10 @@ func (rd *RoomDelegate) OnRoomEnd(r *changsha.Room,start bool) {
 			log.Println("close with error", err.Error())
 		}   
 		
+		if pl.Score()>maxScore {
+			maxScore = int64(pl.Score())
+		} 
+
 	} 
 	
 	rp := mahjong.RoomProcessorInContext(r.Context())
@@ -775,25 +780,36 @@ func (rd *RoomDelegate) OnRoomEnd(r *changsha.Room,start bool) {
 			}).Warn("远程摧毁房间失败")
 	}
 	
+	log.WithFields(
+		log.Fields{
+			"房间id":   r.RoomId(), 
+			"start":	start,
+			"maxScore": maxScore,
+		}).Debug("设置玩家任务")
+			
 	//设置玩家任务
-	if start {
-
+	if start { 
+		
 		for _, pl := range players {
 			
 			if pl.Player() == nil {
 				continue
 			} 
-
-			playerId := pl.Id()
-			score := int32(pl.Score())
 			
-			err = mahjongContext.HallClient.GameEnd(playerId,score) 
+			playerId := pl.Id()
+			
+			if (maxScore <= pl.Score()) {
+				err = mahjongContext.HallClient.GameEnd(playerId,true) 
+			}else{
+				err = mahjongContext.HallClient.GameEnd(playerId,false) 
+			}
 				
 			if err != nil {
 				log.WithFields(
 					log.Fields{
-						"playerId":   playerId,
-						"score": score,
+						"playerId":  playerId,
+						"Score":  pl.Score(),
+						"maxScore":maxScore,
 						"error":  err.Error(),
 					}).Debug("游戏结束，玩家任务失败")
 			} 			

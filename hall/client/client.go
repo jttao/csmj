@@ -11,11 +11,12 @@ import (
 	gamepkghttputils "game/pkg/httputils" 
 
 	"game/hall/api" 
+	log "github.com/Sirupsen/logrus"
 
 )
 
 type HallClient interface { 
-	GameEnd(playerId int64, score int32) error
+	GameEnd(playerId int64, flag bool) error
 }
 
 type HallClientConfig struct {
@@ -26,11 +27,17 @@ type hallClient struct {
 	config *HallClientConfig
 }
 
-func (rmc *hallClient) GameEnd(playerId int64, score int32) error {
+func (rmc *hallClient) GameEnd(playerId int64, maxwin bool) error {
 	
 	apiPath := "/api/hall/task_finish"
 	apiPath = "http://" + rmc.config.HallClientCenter + apiPath
 	
+	log.WithFields(
+		log.Fields{
+			"playerId":   playerId, 
+			"maxwin":	maxwin, 
+		}).Debug("开始设置玩家任务> ")
+
 	//每日游戏任务
 	taskId := int32(2)
 	state := true 
@@ -47,7 +54,7 @@ func (rmc *hallClient) GameEnd(playerId int64, score int32) error {
 
 	//每日连续赢任务
 	taskId = int32(2)
-	state = (score>0) 
+	state = maxwin 
 	form = api.TaskFinishForm {
 		PlayerId : playerId,
 		TaskShareId: taskId,
