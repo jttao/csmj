@@ -198,9 +198,13 @@ func handleCreate(rw http.ResponseWriter, req *http.Request) {
 		httputils.WriteJSON(rw, http.StatusOK, rr)
 		return
 	}
-
+	
+	log.WithFields(log.Fields{
+		"cost":    cost, 
+	}).Debug("创建房间开始扣款")
+	
 	if !rms.Debug() {
-		//扣钱
+		//扣钱 
 		err = us.ChangeCardNum(ownerId, int64(-cost), usermodel.ReasonTypeCost)
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)

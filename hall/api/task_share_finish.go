@@ -8,7 +8,7 @@ import (
 	
 	gamepkghttputils "game/pkg/httputils"
 
-	taskservice "game/hall/tasks"
+	"game/hall/tasks"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/xozrc/pkg/httputils"
@@ -16,8 +16,8 @@ import (
 
 func handleTaskShareFinish(rw http.ResponseWriter, req *http.Request) {
 	log.Debug("请求每日分享任务完成")
-
-	ss := taskservice.TaskServiceInContext(req.Context())
+	
+	ss := tasks.TaskServiceInContext(req.Context())
 	playerId := userservice.UserInContext(req.Context())
 	
 	log.WithFields(
@@ -25,7 +25,7 @@ func handleTaskShareFinish(rw http.ResponseWriter, req *http.Request) {
 			"userId": playerId,
 		}).Debug("请求每日分享任务完成")
 	
-	reward,ut,err := ss.FinishUserTask(playerId,taskservice.taskShareId,true)
+	reward,ut,err := ss.FinishUserTask(playerId,1,true)
 	
 	if err != nil { 
 		rw.WriteHeader(http.StatusInternalServerError)

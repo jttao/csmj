@@ -1,6 +1,6 @@
 {
     "serverId":1,
-    "host":"127.0.0.1",
+    "host":"192.169.3.4",
     "port":3000,
     "room":{
         "waitTime":1000,
@@ -15,6 +15,9 @@
     },
     "roommanage":{
         "roomManageCenter":"127.0.0.1:4000"
+    },
+    "hallclient":{
+        "hallClientCenter":"127.0.0.1:81"
     },
     "user":{
         "key":"./config/key",

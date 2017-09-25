@@ -80,6 +80,7 @@ func (r *room) Id() int64 {
 func (r *room) ServerId() string {
 	return r.serverId
 }
+
 func (r *room) OwnerId() int64 {
 	return r.ownerId
 }

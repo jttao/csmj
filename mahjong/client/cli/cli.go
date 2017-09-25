@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"encoding/json"
+	//"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -22,7 +22,7 @@ import (
 
 	"github.com/codegangsta/cli"
 	"github.com/golang/protobuf/proto"
-	chatmessage "github.com/mahjong/chat/message"
+	//chatmessage "github.com/mahjong/chat/message"
 )
 
 var (
@@ -286,9 +286,9 @@ func connectChatServer(roomAddr string, token string) {
 		log.Fatalf("WebSocket handshake error: %v", err)
 		return
 	}
-
+/****
 	//加入房间
-	go func() {
+	go func() { 
 		cgChatLogin := &chatmessage.CGChatLoginMesssage{}
 		cgChatLogin.Token = token
 		msg := &chatmessage.Message{}
@@ -346,7 +346,7 @@ func connectChatServer(roomAddr string, token string) {
 			}
 		}
 	}()
-
+		***/
 	for {
 		var msg []byte
 		err = websocket.Message.Receive(conn, &msg)

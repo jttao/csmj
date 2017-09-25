@@ -703,7 +703,7 @@ func (rd *RoomDelegate) OnRoomEnd(r *changsha.Room,start bool) {
 		if err != nil {
 			panic(err)
 		}
-	
+		
 		broadcast(r, msgBytes)
 	
 		err = rd.saveRoom(r)
@@ -714,37 +714,54 @@ func (rd *RoomDelegate) OnRoomEnd(r *changsha.Room,start bool) {
 		}    
 	}
 	
-	rp := mahjong.RoomProcessorInContext(r.Context())
-	rp.Stop()
+	mahjongContext := mahjong.MahjongInContext(r.Context())
 
 	//玩家推出游戏服
 	players := r.RoomPlayerManager().Players()
-
+	
 	for _, pl := range r.RoomPlayerManager().Players() {
 		if pl.Player() == nil {
 			continue
 		} 
-		err := pl.Player().Session().Close()
+		
+		err := mahjongContext.RoomManageClient.Leave(pl.Id(),r.RoomId())
 		if err != nil {
 			log.Println("close with error", err.Error())
 		}
+		
+		err = pl.Player().Session().Close()
+		if err != nil {
+			log.Println("close with error", err.Error())
+		}   
+		
 	} 
 	
-	mahjongContext := mahjong.MahjongInContext(r.Context())
-	//移除房间
+	rp := mahjong.RoomProcessorInContext(r.Context())
+	rp.Stop()
+	
+	//移除游戏房间
 	mahjongContext.RoomManager.RemoveRoom(r)
-
+	
+	refund := false
+	if r.GetOpenRoomType()==1 {
+		//代理房间，游戏一旦开始就不用返回房卡
+		if r.CurrentRound() == 0 {
+			refund = true
+		} 
+	}else{
+		//普通房间，游戏开始1局未结束返回房卡
+		if r.CurrentRound() <= 1 {
+			refund = true
+		} 	
+	}
+	
 	//远程摧毁房间
 	log.WithFields(
 		log.Fields{
 			"房间id":   r.RoomId(),
 			"房间主人id": r.OwnerId(),
+			"refund": refund,
 		}).Debug("准备远程摧毁房间")
-	
-	refund := false
-	if r.CurrentRound() <= 1 {
-		refund = true
-	}
 	
 	err := mahjongContext.RoomManageClient.Destroy(r.RoomId(), refund)
 	
@@ -753,8 +770,9 @@ func (rd *RoomDelegate) OnRoomEnd(r *changsha.Room,start bool) {
 			log.Fields{
 				"房间id":   r.RoomId(),
 				"房间主人id": r.OwnerId(),
+				"refund": refund,
 				"error":  err.Error(),
-			}).Debug("远程摧毁房间失败")
+			}).Warn("远程摧毁房间失败")
 	}
 	
 	//设置玩家任务
@@ -767,9 +785,10 @@ func (rd *RoomDelegate) OnRoomEnd(r *changsha.Room,start bool) {
 			} 
 
 			playerId := pl.Id()
-			score := pl.Score() 
+			score := int32(pl.Score())
+			
+			err = mahjongContext.HallClient.GameEnd(playerId,score) 
 				
-			err = mahjongContext.RoomManageClient.GameEnd(playerId,score) 
 			if err != nil {
 				log.WithFields(
 					log.Fields{
@@ -779,8 +798,7 @@ func (rd *RoomDelegate) OnRoomEnd(r *changsha.Room,start bool) {
 					}).Debug("游戏结束，玩家任务失败")
 			} 			
 		} 
-
-	}
+	} 
 
 }
 

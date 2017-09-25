@@ -11,8 +11,11 @@
         "key":"./config/key",
         "expiredTime":3600000
     },
-     "roommanage":{
+    "roommanage":{
         "roomManageCenter":"127.0.0.1:4000"
+    },
+    "hallclient":{
+        "hallClientCenter":"127.0.0.1:81"
     },
     "redis":{
         "host":"127.0.0.1",

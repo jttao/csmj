@@ -34,23 +34,21 @@ func handleDestory(rw http.ResponseWriter, req *http.Request) {
 		log.WithField("roomId", roomId).Warn("房间不存在")
 		rw.WriteHeader(http.StatusOK)
 		return
-	}
+	}   
 	us := userservice.UserServiceInContext(req.Context())
-	if !rms.Debug() {
-		//扣钱
-		if refund && r.Cost() != 0 {
-			err := us.ChangeCardNum(r.OwnerId(), int64(r.Cost()), usermodel.ReasonTypeRefund)
-			if err != nil {
-				rw.WriteHeader(http.StatusInternalServerError)
-				log.WithFields(log.Fields{
-					"ownerId": r.OwnerId(),
-					"cost":    r.Cost,
-					"error":   err,
-				}).Error("摧毁房间,返款失败")
-			}
-		}
+	//扣钱
+	if !rms.Debug() && refund && r.Cost() != 0 {
+		err := us.ChangeCardNum(r.OwnerId(), int64(r.Cost()), usermodel.ReasonTypeRefund)
+		if err != nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			log.WithFields(log.Fields{
+				"ownerId": r.OwnerId(),
+				"cost":    r.Cost,
+				"error":   err,
+			}).Error("摧毁房间,返款失败")
+		} 	
 	}
-
+	//下线
 	for _, p := range r.Players() {
 		err := us.Offline(p.Id())
 		if err != nil {
@@ -59,8 +57,7 @@ func handleDestory(rw http.ResponseWriter, req *http.Request) {
 				"error":    err,
 			}).Warn("离开房间,离线失败")
 		}
-	}
-
+	} 	
 	rms.DestroyRoom(roomId)
 	result := &struct{}{}
 	rr := gamehttputils.NewSuccessResult(result)

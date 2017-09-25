@@ -6,7 +6,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-
+	
 	"game/mahjong/changsha"
 	loginpb "game/mahjong/pb/login"
 	messagetypepb "game/mahjong/pb/messagetype"
@@ -14,6 +14,8 @@ import (
 	"game/mahjong/server/player"
 
 	"game/mahjong/server/room"
+
+	mahjongutil "game/mahjong/server/util"
 
 	"game/session"
 
@@ -97,7 +99,15 @@ func HandleLogin(s session.Session, msg *pb.Message) error {
 		log.WithFields(
 			log.Fields{
 				"playerId": playerId,
-			}).Warn("玩家房间号为0")
+			}).Warn("玩家房间号为0") 
+		err := mahjongutil.CloseWithError(s, int32(mahjong.ErrorRoomNotFound))
+		if err != nil {
+			log.WithFields(
+				log.Fields{
+					"sessionId": s.Id(),
+					"error":     err,
+				}).Warn("房间不存在,关闭错误")
+		} 	
 		return fmt.Errorf("join room id [%d]", roomId)
 	}
 	//获取房间

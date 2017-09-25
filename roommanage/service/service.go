@@ -293,7 +293,6 @@ func (rms *roomManageService) JoinRoom(rid int64, pId int64,ip string) Room {
 	} else {
 		return nil
 	}
-
 }
 
 //离开房间
@@ -315,8 +314,7 @@ func (rms *roomManageService) DestroyRoom(roomId int64) {
 	if r == nil {
 		log.WithField("房间号", roomId).Warn("摧毁不存在的房间")
 		return
-	}
-
+	} 	
 	rms.rwm.Lock()
 	defer rms.rwm.Unlock()
 	//移除所有玩家
@@ -324,15 +322,15 @@ func (rms *roomManageService) DestroyRoom(roomId int64) {
 		delete(rms.playersMap, p.Id())
 	}
 	delete(rms.roomsMap, roomId)
+	//回收房号
 	rms.recycleRoomNums = append(rms.recycleRoomNums, int32(roomId))
 	num, ok := rms.servers[r.ServerId()]
 	if !ok {
 		return
-	}
+	} 
 	rms.servers[r.ServerId()] = num - 1
 	return
 }
-
 
 //获取房间
 func (rms *roomManageService) GetRoomById(roomId int64) Room {

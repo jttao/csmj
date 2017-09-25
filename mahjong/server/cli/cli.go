@@ -19,6 +19,8 @@ import (
 	"game/mahjong/server/login"
 	roomhandler "game/mahjong/server/room/handler"
 
+	hallclient "game/hall/client"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
 	"golang.org/x/net/websocket"
@@ -73,6 +75,7 @@ type serverConfig struct {
 	Redis      *gameredis.RedisConfig                   `json:redis`
 	User       *userservice.UserConfig                  `json:"user"`
 	RoomManage *roommanageclient.RoomManageClientConfig `json:"roomManage"`
+	HallClient *hallclient.HallClientConfig 			`json:"hallclient"`
 	Room       *changsha.RoomConfig                     `json:"room"`
 }
 
@@ -124,12 +127,16 @@ func start(c *cli.Context) {
 	pm := mahjong.NewPlayerManager()
 	//房间管理
 	rm := changsha.NewRoomManager()
+	//大厅服务
+	hc := hallclient.NewHallClient(sc.HallClient)
+
 	//初始化心跳goroutine
 	mah := &mahjong.Mahjong{}
 	mah.UserService = us
 	mah.DB = db
 	mah.RS = rs
 	mah.RoomManageClient = rmc
+	mah.HallClient = hc
 	mah.RoomManager = rm
 	mah.PlayerManager = pm
 	dis := mahjong.NewDispatch()

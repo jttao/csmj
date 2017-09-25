@@ -7,13 +7,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-
+	
 	gamepkghttputils "game/pkg/httputils"
 	"game/roommanage/api"
-
-	hallapi "game/hall/api"
-	tasks "game/hall/tasks"
-	
 
 )
 
@@ -21,8 +17,7 @@ type RoomManageClient interface {
 	Create(RoomType int, ownerId int, maxPlayers int) (int64, error)
 	Query(playerId int64) (roomId int64, serverId string, host string, port int, maxPlayers int, round int, roomConfig string,forbidIp int,openRoomType int,createTime int64,forbidJoinTime int64,lastGameTime int64,ownerId int64,err error)
 	Leave(playerId int64, roomId int64) error
-	Destroy(roomId int64, refund bool) error
-	GameEnd(playerId int64, score int32) error
+	Destroy(roomId int64, refund bool) error 
 }
 
 type RoomManageClientConfig struct {
@@ -127,41 +122,6 @@ func (rmc *roomManageClient) Destroy(roomId int64, refund bool) error {
 	if err != nil {
 		return err
 	}
-	return nil
-}
-
-func (rmc *roomManageClient) GameEnd(playerId int64, score int32) error {
-	
-	apiPath := "/api/hall/task_finish"
-	apiPath = "http://" + rmc.config.RoomManageCenter + apiPath
-
-	//每日游戏任务
-	taskId := tasks.taskPlayId
-	state := true 
-	form := hallapi.TaskFinishForm {
-		PlayerId : playerId,
-		TaskShareId: taskId,
-		State: state,
-	} 	
-		
-	_, err := gamepkghttputils.PostJson(apiPath, nil, form)
-	if err != nil {
-		return err
-	}
-
-	//每日连续赢任务
-	taskId = tasks.taskWinId
-	state = (score>0) 
-	form = hallapi.TaskFinishForm {
-		PlayerId : playerId,
-		TaskShareId: taskId,
-		State: state,
-	}   
-	_, err := gamepkghttputils.PostJson(apiPath, nil, form)
-	if err != nil {
-		return err
-	}
-	
 	return nil
 }
 

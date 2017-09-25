@@ -28,9 +28,9 @@ func handleTaskFinish(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	
-	playerId := loginForm.PlayerId
-	taskShareId := loginForm.TaskShareId
-	state := loginForm.State 
+	playerId := taskForm.PlayerId
+	taskShareId := taskForm.TaskShareId
+	state := taskForm.State 
 
 	ss := taskservice.TaskServiceInContext(req.Context()) 
 	
@@ -55,7 +55,7 @@ func handleTaskFinish(rw http.ResponseWriter, req *http.Request) {
 
 		us := userservice.UserServiceInContext(req.Context())  
 
-		reason := 0 
+		reason := usermodel.ReasonType(0)
 		if taskShareId==1 {
 			reason = usermodel.ReasonTypeTask1
 		}

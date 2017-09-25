@@ -12,6 +12,7 @@ import (
 	hallapi "game/hall/api"
 	news "game/hall/news"
 	notice "game/hall/notice"
+	tasks "game/hall/tasks"
 
 	changsharoomapi "game/mahjong/changsha/room/api"
 	changsharoomservice "game/mahjong/changsha/room/service"
@@ -22,6 +23,7 @@ import (
 	gameredis "game/redis"
 	roommanageclient "game/roommanage/client"
 	userservice "game/user/service"
+	hallclient "game/hall/client"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
@@ -79,6 +81,7 @@ type serverConfig struct {
 	Port       int                                      `json:"port"`
 	ChangSha   *changShaConfig                          `json:"changsha"`
 	RoomManage *roommanageclient.RoomManageClientConfig `json:"roomManage"`
+	HallClient *hallclient.HallClientConfig 			`json:"hallclient"`
 	User       *userservice.UserConfig                  `json:"user"`
 	Redis      *gameredis.RedisConfig                   `json:"redis"`
 	DB         *gamedb.DbConfig                         `json:"db"`
@@ -149,9 +152,15 @@ func start(ctx *cli.Context) {
 	ns := news.NewNewsService(db, rs)
 	//跑马灯服务
 	noticeService := notice.NewNoticeService(db, rs)
+	//任务服务器
+	ts := tasks.NewTaskService(db, rs)
+
+	//大厅服务
+	hc := hallclient.NewHallClient(sc.HallClient) 
+
 	//初始化房间查询服务
 	rmc := roommanageclient.NewRoomManageClient(sc.RoomManage)
-
+	
 	//初始化长沙房间服务
 	csrs := changsharoomservice.NewChangShaRoomService(sc.ChangSha.Room, csrts)
 
@@ -182,6 +191,11 @@ func start(ctx *cli.Context) {
 	n.UseFunc(setupNewsServiceHandler(ns))
 	n.UseFunc(setupNoticeServiceHandler(noticeService))
 	n.UseFunc(setupRoomManageClientHandler(rmc))
+	n.UseFunc(setupTasksServiceHandler(ts))
+	
+	n.UseFunc(setupHallClientHandler(hc))
+	
+
 	n.UseFunc(userservice.SetupUserServiceHandler(us))
 	n.UseFunc(setupChangShaTemplateServiceHandler(csrts))
 	n.UseFunc(setupChangShaRoomServiceHandler(csrs))
@@ -215,6 +229,26 @@ func setupNewsServiceHandler(ns news.NewsService) negroni.HandlerFunc {
 		nctx := news.WithNewsService(ctx, ns)
 		nreq := req.WithContext(nctx)
 
+		hf(rw, nreq)
+	})
+}
+
+func setupTasksServiceHandler(ns tasks.TaskService) negroni.HandlerFunc {
+	return negroni.HandlerFunc(func(rw http.ResponseWriter, req *http.Request, hf http.HandlerFunc) {
+		ctx := req.Context()
+		nctx := tasks.WithTaskService(ctx, ns)
+		nreq := req.WithContext(nctx)
+
+		hf(rw, nreq)
+	})
+}
+
+func setupHallClientHandler(hc hallclient.HallClient) negroni.HandlerFunc {
+	return negroni.HandlerFunc(func(rw http.ResponseWriter, req *http.Request, hf http.HandlerFunc) {
+		ctx := req.Context()
+		nctx := hallclient.WithHallClient(ctx, hc)
+		nreq := req.WithContext(nctx)
+		
 		hf(rw, nreq)
 	})
 }

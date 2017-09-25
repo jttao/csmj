@@ -32,7 +32,6 @@ func (rm *RoomManager) RemoveRoom(r *Room) {
 	rm.rwm.Lock()
 	defer rm.rwm.Unlock()
 	delete(rm.roomMap, r.RoomId())
-
 }
 
 func NewRoomManager() *RoomManager {
