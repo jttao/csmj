@@ -80,8 +80,7 @@ type serverConfig struct {
 	Host       string                                   `json:"host"`
 	Port       int                                      `json:"port"`
 	ChangSha   *changShaConfig                          `json:"changsha"`
-	RoomManage *roommanageclient.RoomManageClientConfig `json:"roomManage"`
-	HallClient *hallclient.HallClientConfig 			`json:"hallclient"`
+	RoomManage *roommanageclient.RoomManageClientConfig `json:"roomManage"` 
 	User       *userservice.UserConfig                  `json:"user"`
 	Redis      *gameredis.RedisConfig                   `json:"redis"`
 	DB         *gamedb.DbConfig                         `json:"db"`
@@ -155,9 +154,6 @@ func start(ctx *cli.Context) {
 	//任务服务器
 	ts := tasks.NewTaskService(db, rs)
 
-	//大厅服务
-	hc := hallclient.NewHallClient(sc.HallClient) 
-
 	//初始化房间查询服务
 	rmc := roommanageclient.NewRoomManageClient(sc.RoomManage)
 	
@@ -170,6 +166,9 @@ func start(ctx *cli.Context) {
 		log.Fatalln("init changsha user service failed:", err)
 	}
 
+	//大厅服务
+	hc := hallclient.NewHallClient(ts,us) 
+	
 	//初始化录像服务
 	recordS := recordservice.NewRecordService(db)
 

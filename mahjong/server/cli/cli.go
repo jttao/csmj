@@ -19,6 +19,9 @@ import (
 	"game/mahjong/server/login"
 	roomhandler "game/mahjong/server/room/handler"
 
+
+	taskservice "game/hall/tasks"
+
 	hallclient "game/hall/client"
 
 	log "github.com/Sirupsen/logrus"
@@ -74,8 +77,7 @@ type serverConfig struct {
 	DB         *gamedb.DbConfig                         `json:db`
 	Redis      *gameredis.RedisConfig                   `json:redis`
 	User       *userservice.UserConfig                  `json:"user"`
-	RoomManage *roommanageclient.RoomManageClientConfig `json:"roomManage"`
-	HallClient *hallclient.HallClientConfig 			`json:"hallclient"`
+	RoomManage *roommanageclient.RoomManageClientConfig `json:"roomManage"` 
 	Room       *changsha.RoomConfig                     `json:"room"`
 }
 
@@ -126,10 +128,12 @@ func start(c *cli.Context) {
 	//初始化用户管理
 	pm := mahjong.NewPlayerManager()
 	//房间管理
-	rm := changsha.NewRoomManager()
-	//大厅服务
-	hc := hallclient.NewHallClient(sc.HallClient)
+	rm := changsha.NewRoomManager() 
 
+	ts := taskservice.NewTaskService(db, rs)
+	//大厅服务
+	hc := hallclient.NewHallClient(ts,us)
+	
 	//初始化心跳goroutine
 	mah := &mahjong.Mahjong{}
 	mah.UserService = us

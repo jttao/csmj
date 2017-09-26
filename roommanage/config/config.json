@@ -11,7 +11,7 @@
     },
     "user":{
         "key":"./config/key",
-        "expiredTime":3600000
+        "expiredTime":2592000000
     },
     "db":{
         "debug":true,

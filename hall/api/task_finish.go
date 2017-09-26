@@ -6,9 +6,10 @@ import (
 	usermodel "game/user/model"
 	userservice "game/user/service"
 	
-	gamepkghttputils "game/pkg/httputils"
-
 	taskservice "game/hall/tasks"
+	
+	gamepkghttputils "game/pkg/httputils"
+ 
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/xozrc/pkg/httputils"

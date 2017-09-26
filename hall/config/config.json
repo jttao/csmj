@@ -9,14 +9,11 @@
     },
     "user":{
         "key":"./config/key",
-        "expiredTime":3600000
+        "expiredTime":2592000000
     },
     "roommanage":{
         "roomManageCenter":"127.0.0.1:4000"
-    },
-    "hallclient":{
-        "hallClientCenter":"127.0.0.1:81"
-    },
+    }, 
     "redis":{
         "host":"127.0.0.1",
         "port":6379,
@@ -24,7 +21,6 @@
         "maxActive":50,
         "wait": true,
         "idleTimeout":240
-
     },
     "db":{
         "debug":true,
@@ -35,7 +31,7 @@
         "dbName":"game",
         "parseTime":true,
         "charset":"utf8",
-          "maxActive":100,
+        "maxActive":100,
         "maxIdle":50,
         "maxLifeTime":240
     }

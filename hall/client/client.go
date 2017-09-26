@@ -1,106 +1,99 @@
 package client
 
-import (
-	"bytes"
-	"context"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
+import ( 
+	"context" 
 
-	gamepkghttputils "game/pkg/httputils" 
+	usermodel "game/user/model"
+	userservice "game/user/service"
+	
+	taskservice "game/hall/tasks"
 
-	"game/hall/api" 
+	//gamepkghttputils "game/pkg/httputils"  
+	//"game/hall/api" 
 	log "github.com/Sirupsen/logrus"
 
 )
 
 type HallClient interface { 
 	GameEnd(playerId int64, flag bool) error
-}
-
-type HallClientConfig struct {
-	HallClientCenter       string      `json:"hallClientCenter"` 
+	FinishTask(playerId int64,taskId int32,state bool) error
 }
 
 type hallClient struct {
-	config *HallClientConfig
+	UserService      userservice.UserService  
+	TaskService      taskservice.TaskService 
 }
 
-func (rmc *hallClient) GameEnd(playerId int64, maxwin bool) error {
-	
-	apiPath := "/api/hall/task_finish"
-	apiPath = "http://" + rmc.config.HallClientCenter + apiPath
+func (hc *hallClient) GameEnd(playerId int64, maxwin bool) error {
 	
 	log.WithFields(
 		log.Fields{
-			"playerId":   playerId, 
-			"maxwin":	maxwin, 
+			"playerId": playerId, 
+			"maxwin":  maxwin,  
 		}).Debug("开始设置玩家任务> ")
-
-	//每日游戏任务
-	taskId := int32(2) 
-	form := api.TaskFinishForm {
-		PlayerId : playerId,
-		TaskId: taskId,
-		State: true,
-	} 	
 	
-	_, err := gamepkghttputils.PostJson(apiPath, nil, form)
+	//每日游戏任务   
+	err := hc.FinishTask(playerId,2,true)
 	if err != nil {
 		return err
-	}
-	
+	}  
 	if maxwin { 
-		//每日连续赢任务
-		taskId = int32(2) 
-		form = api.TaskFinishForm {
-			PlayerId : playerId,
-			TaskId: taskId,
-			State: true,
-		}   
-		_, err1 := gamepkghttputils.PostJson(apiPath, nil, form) 
+		//每日连续赢任务 
+		err1 := hc.FinishTask(playerId,3,true)
 		if err1 != nil {
 			return err1
 		} 
-	}
-	
+	}   
 	return nil
 }
 
-func NewHallClient(config *HallClientConfig) HallClient {
-	rmc := &hallClient{}
-	rmc.config = config
-	return rmc
+func (hc *hallClient) FinishTask(playerId int64,taskId int32,state bool) error{
+	
+	log.WithFields(
+		log.Fields{
+			"userId": playerId,
+		}).Debug("请求每日任务完成")
+	
+	reward,ut,err := hc.TaskService.FinishUserTask(playerId,taskId,state)
+	
+	if err != nil {  
+		log.WithFields(
+			log.Fields{
+				"userId": playerId,
+				"error":  err,
+			}).Error("请求每日任务完成,错误")
+		return nil
+	} 
+	
+	if reward { 
+		reason := usermodel.ReasonType(0)
+		if taskId==1 {
+			reason = usermodel.ReasonTypeTask1
+		}
+		if taskId==2 {
+			reason = usermodel.ReasonTypeTask2
+		}
+		if taskId==3 {
+			reason = usermodel.ReasonTypeTask3
+		} 
+		err := hc.UserService.ChangeCardNum( playerId , int64(ut.Reward), reason ) 	
+		if err != nil { 
+			log.WithFields(log.Fields{
+				"userId": 	playerId,
+				"Reward":   ut.Reward,
+				"error":   	err,
+			}).Error("请求每日任务完成,发送奖励失败")
+			return nil
+		}
+	}
+	return nil
 }
 
-func postForm(apiPath string, form interface{}) (result interface{}, err error) {
-
-	bodyBytes, err := json.Marshal(form)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := http.Post(apiPath, "application/json", bytes.NewBuffer(bodyBytes))
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("status failed")
-	}
-	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	rr := &gamepkghttputils.RestResult{}
-	err = json.Unmarshal(respBody, rr)
-	if err != nil {
-		return nil, err
-	}
-	if rr.ErrorCode != 0 {
-		return rr.Result, fmt.Errorf("error_code %d", rr.ErrorCode)
-	}
-	return rr.Result, nil
+func NewHallClient(ts taskservice.TaskService ,us userservice.UserService,) HallClient {
+	rmc := &hallClient{}
+	rmc.TaskService = ts 
+	rmc.UserService = us
+	return rmc
 }
 
 const (

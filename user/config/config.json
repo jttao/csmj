@@ -3,7 +3,7 @@
     "port":80,   
     "user":{
         "key":"./config/key",
-        "expiredTime":10800000
+        "expiredTime":2592000000
     },
     "redis":{
         "host":"127.0.0.1",

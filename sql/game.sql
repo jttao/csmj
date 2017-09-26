@@ -192,6 +192,6 @@ select * from t_tasks;
 
 select * from t_user_task;
 
-update t_tasks set targetNum=2 where id!=0;
+update t_tasks set targetNum=2 where id!=1;
 
 
