@@ -10,8 +10,7 @@ import (
 	roommanageclient "game/roommanage/client"
 	hallclient "game/hall/client"
 	
-	userserice "game/user/service"
-	//taskserice "game/hall/tasks"
+	userserice "game/user/service" 
 	"sync"
 )
 
@@ -23,8 +22,7 @@ type Mahjong struct {
 	ServerCfg        *ServerConfig
 	DB               gamedb.DBService
 	RS               gameredis.RedisService
-	UserService      userserice.UserService
-	//TaskService		 taskserice.TaskService
+	UserService      userserice.UserService 
 	RoomManageClient roommanageclient.RoomManageClient
 	HallClient		 hallclient.HallClient
 	RoomManager      *changsha.RoomManager

@@ -50,8 +50,13 @@ func (p *player) RoomId() int64 {
 func (p *player) PlayerState() PlayerState {
 	return p.playerState
 }
+
 func (p *player) Session() session.Session {
 	return p.session
+}
+
+func (p *player) SetSession(s session.Session) {
+	p.session = s 
 }
 
 func (p *player) Ping() {

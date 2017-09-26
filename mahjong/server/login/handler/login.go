@@ -78,11 +78,11 @@ func HandleLogin(s session.Session, msg *pb.Message) error {
 		log.WithFields(
 			log.Fields{
 				"playerId": playerId,
-			}).Error("玩家已经在服务器内")
-		pl.Session().Close()
-		s.Close()
-		return nil
-	}  
+			}).Error("玩家已经在服务器内") 
+		pl.Session().Close() 
+		s.Close() 
+		return nil 
+	}   
 	roomId, _, _, _, maxPlayer, round, roomConfig,forbidIp,openRoomType,createTime,forbidJoinTime,lastGameTime,ownerId,err := mahjongContext.RoomManageClient.Query(playerId)
 	if err != nil {
 		//TODO 发送异常信息
@@ -110,6 +110,7 @@ func HandleLogin(s session.Session, msg *pb.Message) error {
 		} 	
 		return fmt.Errorf("join room id [%d]", roomId)
 	}
+
 	//获取房间
 	r := mahjongContext.RoomManager.GetRoomById(roomId)
 	if r == nil {
@@ -157,8 +158,7 @@ func HandleLogin(s session.Session, msg *pb.Message) error {
 	pl = player.NewPlayer(playerId, roomId, s)
 	tctx := player.WithPlayer(s.Context(), pl)
 	s.SetContext(tctx)
-	pl.Start()
-
+	pl.Start() 
 	err = mahjongContext.PlayerManager.AddPlayer(pl)
 	if err != nil {
 		log.WithFields(
@@ -167,7 +167,8 @@ func HandleLogin(s session.Session, msg *pb.Message) error {
 			}).Warn("用户管理器添加用户失败")
 		pl.Session().Close()
 		return nil
-	}
+	} 
+	
 	//优化
 	gcLogin := &loginpb.GCLogin{}
 	gcLogin.PlayerId = &playerId

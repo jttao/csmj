@@ -39,32 +39,30 @@ func (rmc *hallClient) GameEnd(playerId int64, maxwin bool) error {
 		}).Debug("开始设置玩家任务> ")
 
 	//每日游戏任务
-	taskId := int32(2)
-	state := true 
+	taskId := int32(2) 
 	form := api.TaskFinishForm {
 		PlayerId : playerId,
-		TaskShareId: taskId,
-		State: state,
+		TaskId: taskId,
+		State: true,
 	} 	
 	
 	_, err := gamepkghttputils.PostJson(apiPath, nil, form)
 	if err != nil {
 		return err
 	}
-
-	//每日连续赢任务
-	taskId = int32(2)
-	state = maxwin 
-	form = api.TaskFinishForm {
-		PlayerId : playerId,
-		TaskShareId: taskId,
-		State: state,
-	}   
-
-	_, err1 := gamepkghttputils.PostJson(apiPath, nil, form)
-
-	if err1 != nil {
-		return err1
+	
+	if maxwin { 
+		//每日连续赢任务
+		taskId = int32(2) 
+		form = api.TaskFinishForm {
+			PlayerId : playerId,
+			TaskId: taskId,
+			State: true,
+		}   
+		_, err1 := gamepkghttputils.PostJson(apiPath, nil, form) 
+		if err1 != nil {
+			return err1
+		} 
 	}
 	
 	return nil

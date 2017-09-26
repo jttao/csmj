@@ -786,7 +786,7 @@ func (rd *RoomDelegate) OnRoomEnd(r *changsha.Room,start bool) {
 			"start":	start,
 			"maxScore": maxScore,
 		}).Debug("设置玩家任务")
-			
+	
 	//设置玩家任务
 	if start { 
 		
@@ -798,12 +798,12 @@ func (rd *RoomDelegate) OnRoomEnd(r *changsha.Room,start bool) {
 			
 			playerId := pl.Id()
 			
-			if (maxScore <= pl.Score()) {
+			if ( maxScore <= pl.Score() && r.CurrentRound() == r.TotalRound() ) {
 				err = mahjongContext.HallClient.GameEnd(playerId,true) 
 			}else{
 				err = mahjongContext.HallClient.GameEnd(playerId,false) 
 			}
-				
+			
 			if err != nil {
 				log.WithFields(
 					log.Fields{

@@ -16,7 +16,7 @@ import (
 
 type TaskFinishForm struct { 
 	PlayerId     	int64	`form:"playerId"`  
-	TaskShareId     int32	`form:"taskShareId"` 
+	TaskId     		int32	`form:"taskId"` 
 	State     		bool    `form:"state"` 
 }
 
@@ -29,7 +29,7 @@ func handleTaskFinish(rw http.ResponseWriter, req *http.Request) {
 	}
 	
 	playerId := taskForm.PlayerId
-	taskShareId := taskForm.TaskShareId
+	taskId := taskForm.TaskId
 	state := taskForm.State 
 
 	ss := taskservice.TaskServiceInContext(req.Context()) 
@@ -39,7 +39,7 @@ func handleTaskFinish(rw http.ResponseWriter, req *http.Request) {
 			"userId": playerId,
 		}).Debug("请求每日任务完成")
 	
-	reward,ut,err := ss.FinishUserTask(playerId,taskShareId,state)
+	reward,ut,err := ss.FinishUserTask(playerId,taskId,state)
 	
 	if err != nil { 
 		rw.WriteHeader(http.StatusInternalServerError)
@@ -56,13 +56,13 @@ func handleTaskFinish(rw http.ResponseWriter, req *http.Request) {
 		us := userservice.UserServiceInContext(req.Context())  
 
 		reason := usermodel.ReasonType(0)
-		if taskShareId==1 {
+		if taskId==1 {
 			reason = usermodel.ReasonTypeTask1
 		}
-		if taskShareId==2 {
+		if taskId==2 {
 			reason = usermodel.ReasonTypeTask2
 		}
-		if taskShareId==3 {
+		if taskId==3 {
 			reason = usermodel.ReasonTypeTask3
 		}
 		
@@ -70,9 +70,9 @@ func handleTaskFinish(rw http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
 			log.WithFields(log.Fields{
-				"userId": playerId,
+				"userId": 	playerId,
 				"Reward":   ut.Reward,
-				"error":   err,
+				"error":   	err,
 			}).Error("请求每日任务完成,发送奖励失败")
 			return
 		}
