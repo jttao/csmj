@@ -152,7 +152,7 @@ func SetupRoomCardServiceHandler(us gmservice.RoomCardService) negroni.HandlerFu
 func SetupTaskServiceHandler(us gmservice.TaskService) negroni.HandlerFunc {
 	return negroni.HandlerFunc(func(rw http.ResponseWriter, req *http.Request, hf http.HandlerFunc) {
 		ctx := req.Context()
-		nctx := gmservice.WitTaskService(ctx, us)
+		nctx := gmservice.WithTaskService(ctx, us)
 		nreq := req.WithContext(nctx)
 		hf(rw, nreq)
 	})

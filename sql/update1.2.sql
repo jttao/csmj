@@ -4,6 +4,8 @@ set character_set_server = 'utf8';
 
 USE `game`;
 
+ALTER TABLE t_user ADD location varchar(100);
+
 -- ----------------------------
 -- Table structure for t_tasks
 -- ----------------------------

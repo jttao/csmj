@@ -13,7 +13,7 @@ import (
 )
 
 type TaskInfoForm struct {
-	TaskId int64 `form:"taskId"`
+	TaskId int32 `form:"taskId"`
 }
 
 type TaskInfoResponse struct {
@@ -23,7 +23,6 @@ type TaskInfoResponse struct {
 	Content         string    `json:"content"` 
 	CreateTime    int64  `json:"createTime"`
 }
-
 
 func convertTaskToResponse(u *model.TaskModel) *TaskInfoResponse {
 	uir := &TaskInfoResponse{}
@@ -54,10 +53,10 @@ func handleInfoTask(rw http.ResponseWriter, req *http.Request) {
 			"form": form,
 		}).Debug("请求任务信息")
 
-	us := gmservice.TaskServiceInContext(req.Context())
+	ts := gmservice.TaskServiceInContext(req.Context())
 	taskId := form.TaskId
 
-	task, err := us.GetTaskById(taskId)
+	task, err := ts.GetTaskById(taskId)
 	if err != nil {
 		log.WithFields(
 			log.Fields{
@@ -79,7 +78,7 @@ func handleInfoTask(rw http.ResponseWriter, req *http.Request) {
 				"taskId": taskId,
 			}).Debug("请求任务信息,查无此人")
 	} else {
-		result := convertTaskToResponse(user)
+		result := convertTaskToResponse(task)
 		rr := gamepkghttputils.NewSuccessResult(result)
 		httputils.WriteJSON(rw, http.StatusOK, rr)
 		log.WithFields(

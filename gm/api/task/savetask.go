@@ -5,9 +5,7 @@ import (
 	"net/http"
 
 	gamepkghttputils "game/pkg/httputils"
-
-	model "game/hall/model"
-
+	
 	log "github.com/Sirupsen/logrus"
 	"github.com/xozrc/pkg/httputils"
 )
@@ -32,14 +30,14 @@ func handleSaveTask(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	
-	us := gmservice.TaskServiceInContext(req.Context())
+	ts := gmservice.TaskServiceInContext(req.Context())
 	taskId := form.TaskId
 	reward := form.Reward
 	targetNum := form.TargetNum
 	content := form.Content
 	
 	//判断任务是否存在
-	err := us.UpdateTask(taskId,reward,targetNum,content)
+	err = ts.UpdateTask(taskId,reward,targetNum,content)
 	if err != nil {
 		log.WithFields(
 			log.Fields{
@@ -58,8 +56,9 @@ func handleSaveTask(rw http.ResponseWriter, req *http.Request) {
 	log.WithFields(
 		log.Fields{
 			"ip":     req.RemoteAddr,
-			"userId": userId,
-			"flag":   flag,
+			"taskId": taskId,
+			"reward":   reward,
+			"targetNum":   targetNum, 
 		}).Debug("修改任务,成功")
 
 }

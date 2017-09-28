@@ -6,8 +6,6 @@ import (
 
 	gamepkghttputils "game/pkg/httputils"
 	
-	model "game/hall/model"
-
 	log "github.com/Sirupsen/logrus"
 	"github.com/xozrc/pkg/httputils"
 )
@@ -80,8 +78,8 @@ func handleListTasks(rw http.ResponseWriter, req *http.Request) {
 
 	result := &TaskListResponse{}
 	taskResults := make([]*TaskInfoResponse, 0, len(tasks))
-	for _, user := range tasks {
-		taskResult := convertTaskToResponse(user)
+	for _, tk := range tasks {
+		taskResult := convertTaskToResponse(tk)
 		taskResults = append(taskResults, taskResult)
 	}
 

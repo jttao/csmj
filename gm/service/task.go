@@ -2,8 +2,7 @@ package service
 
 import (
 	"context"
-	gamedb "game/db"
-	"game/pkg/timeutils"
+	gamedb "game/db" 
 	model "game/hall/model"
 	"math"
 
@@ -15,6 +14,10 @@ type TaskService interface {
 	GetTaskById(id int32) (u *model.TaskModel, err error)
 	UpdateTask(id int32,reward int32,targetNum int32,content string) error
 } 
+
+type taskService struct {
+	db gamedb.DBService
+}
 
 const (
 	taskServiceKey = "gm.task_service"
@@ -33,14 +36,10 @@ func TaskServiceInContext(ctx context.Context) TaskService {
 }
 
 func NewTaskService(db gamedb.DBService) TaskService {
-	ts := &TaskService{
+	ts := &taskService{
 		db: db,
 	}
 	return ts
-}
-
-type taskService struct {
-	db gamedb.DBService
 }
 
 func (ts *taskService) GetTasks(page int, pageSize int) (totalPage int, tasks []*model.TaskModel, err error) {
@@ -86,13 +85,9 @@ func (ts *taskService) UpdateTask(id int32,reward int32,targetNum int32,content 
 	task.TargetNum = targetNum
 	task.Content = content 
 	tdb := ts.db.DB().Model(task).Update(task) 
-	err := tdb.Error
+	err = tdb.Error
 	if err != nil {
 		return err
 	}
 	return nil 
-}
-
-type CountModel struct {
-	Count int `gorm:"column:count"`
-}
+} 
